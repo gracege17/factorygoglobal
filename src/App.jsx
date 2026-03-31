@@ -254,6 +254,37 @@ const validateProductPhotos = (productItems, productPhotos, isZh) => {
   return ''
 }
 
+const getCategoryItems = (value = '') =>
+  value
+    .split(/[\/、，,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const getMarketReason = (country, isZh) => {
+  const reasons = {
+    USA: isZh ? '需求体量大，适合强调稳定交期、质量一致性和长期供货能力。' : 'Large demand base for suppliers with reliable lead times and repeatable quality.',
+    Germany: isZh ? '重视认证、环保和供应稳定，适合突出合规与可持续优势。' : 'Strong fit for compliance, sustainability, and dependable supply positioning.',
+    UAE: isZh ? '辐射中东分销网络，适合做区域分销和批量供货切入。' : 'Good regional hub for distributor-led expansion and wholesale supply.',
+    Vietnam: isZh ? '适合先做东南亚试水，进入成本和物流压力相对更低。' : 'A lighter-weight Southeast Asia entry point with lower logistics pressure.',
+  }
+
+  return reasons[country] || (isZh ? '适合作为下一步重点验证市场。' : 'A reasonable market to validate next.')
+}
+
+const getEntryDifficulty = (market, isZh) => {
+  const map = {
+    usa: isZh ? '中高，竞争强但需求大' : 'Medium-high, competitive but large demand',
+    germany: isZh ? '中高，重合规与认证' : 'Medium-high, compliance heavy',
+    vietnam: isZh ? '中等，适合低成本试水' : 'Medium, lighter-cost entry',
+    uae: isZh ? '中等，适合区域分销切入' : 'Medium, strong for distributor-led entry',
+  }
+
+  const key = market.trim().toLowerCase()
+  return map[key] || (isZh ? '中等，建议进一步核实 HS 编码和渠道要求' : 'Medium, validate HS code and channel requirements')
+}
+
+const getFilledPhotoGroups = (photos = []) => photos.filter((group) => group.length >= PRODUCT_PHOTO_MIN).length
+
 const usWebsiteCopy = {
   heroEyebrow: 'ONE-PAGE WEBSITE PREVIEW',
   heroTitle: 'Reliable B2B Manufacturing Partner for U.S. Buyers',
@@ -295,7 +326,7 @@ function App() {
   const [actionError, setActionError] = useState('')
   const [websiteGenerated, setWebsiteGenerated] = useState(false)
   const [onePagerGenerated, setOnePagerGenerated] = useState(false)
-  const [lang, setLang] = useState('en')
+  const [lang, setLang] = useState('zh')
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [leadData, setLeadData] = useState({
@@ -329,6 +360,10 @@ function App() {
   const stepLabels = isZh
     ? ['基础信息', 'AI 战略', '方向确认', '成本框架', '物料生成']
     : steps
+
+  useEffect(() => {
+    document.documentElement.lang = isZh ? 'zh-CN' : 'en'
+  }, [isZh])
 
   const updateStep1 = (field, value) => {
     setLeadData((prev) => ({
@@ -664,9 +699,12 @@ function App() {
   }
 
   const ai = leadData.step2.aiPositioning
+  const topMarket = ai?.topMarkets?.[0]
+  const categoryItems = getCategoryItems(leadData.step1.productCategory)
   const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
   const parsedProducts = getFilledProductItems(leadData.step5.productItems)
   const productEntries = getFilledProductEntries(leadData.step5.productItems, leadData.step5.productPhotos)
+  const filledPhotoGroups = getFilledPhotoGroups(leadData.step5.productPhotos)
 
   const validateStep5Inputs = () => {
     const productValidation = validateProductItems(leadData.step5.productItems, isZh)
@@ -752,80 +790,174 @@ function App() {
       <section className="rounded-3xl border border-black/5 bg-white/85 p-4 shadow-soft md:p-8">
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? 'Step 1. 基本信息采集' : 'Step 1. Basic Information'}</h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label={isZh ? '公司名称' : 'Company Name'}>
-                  <input
-                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
-                    value={leadData.step1.companyName}
-                    onChange={(e) => handleCompanyNameChange(e.target.value)}
-                    onBlur={handleCompanyNameBlur}
-                    placeholder={isZh ? '例如：浙江某某实业有限公司' : 'e.g. Zhejiang Eco Paper Co., Ltd'}
-                  />
-                  <div className="mt-1 flex items-center justify-end text-xs text-black/45">
-                    <span>{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
-                  </div>
-                  {companyNameError && <p className="mt-1 text-xs text-clay">{companyNameError}</p>}
-                </Field>
-                <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
-                  <input
-                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
-                    value={leadData.step1.productCategory}
-                    onChange={(e) => handleProductCategoryChange(e.target.value)}
-                    onBlur={handleProductCategoryBlur}
-                    placeholder={isZh ? '例如：纸巾 / 包装材料' : 'e.g. Tissue paper / Packaging'}
-                  />
-                  <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
-                    <span className={productCategoryError ? 'text-clay' : 'text-black/50'}>
-                      {productCategoryError ||
-                        (isZh
-                          ? `最多 ${PRODUCT_CATEGORY_MAX_ITEMS} 个品类，支持 / 或逗号分隔`
-                          : `Max ${PRODUCT_CATEGORY_MAX_ITEMS} categories, split with "/" or commas`)}
-                    </span>
-                    <span className="text-black/45">
-                      {leadData.step1.productCategory.trim().length}/{PRODUCT_CATEGORY_MAX_LENGTH}
-                    </span>
-                  </div>
-                </Field>
+              <h2 className="text-2xl">{isZh ? '第 1 步：基本信息采集' : 'Step 1. Basic Information'}</h2>
+              <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
+                <p className="text-sm text-black/70">
+                  {isZh
+                    ? '先填写 3 项基础信息，系统会据此生成市场推荐、定位建议和后续物料方向。'
+                    : 'Provide 3 core inputs first. We will use them to generate market recommendations, positioning, and material direction.'}
+                </p>
               </div>
 
-              <Field label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}>
-                <input
-                  className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
-                  value={leadData.step1.currentCapacity}
-                  onChange={(e) => handleCapacityChange(e.target.value)}
-                  onBlur={handleCapacityBlur}
-                  placeholder={isZh ? '例如：月产 8000 吨，5 条产线' : 'e.g. 8,000 tons/month, 5 production lines'}
-                />
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
-                  <span className={capacityError ? 'text-clay' : 'text-black/50'}>
-                    {capacityError || (isZh ? '选填，建议填写月产能与产线数' : 'Optional: monthly capacity and production lines')}
-                  </span>
-                  <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
-                </div>
-              </Field>
+              <div className="space-y-4 xl:grid xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] xl:gap-5 xl:space-y-0">
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field
+                      label={isZh ? '公司名称' : 'Company Name'}
+                      hint={isZh ? '用于生成对外展示的定位文案与物料标题。' : 'Used in positioning copy and generated materials.'}
+                    >
+                      <input
+                        className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
+                        value={leadData.step1.companyName}
+                        onChange={(e) => handleCompanyNameChange(e.target.value)}
+                        onBlur={handleCompanyNameBlur}
+                        placeholder={isZh ? '例如：浙江某某实业有限公司' : 'e.g. Zhejiang Eco Paper Co., Ltd'}
+                      />
+                      <div className="mt-1 flex items-center justify-end text-xs text-black/45">
+                        <span>{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
+                      </div>
+                      {companyNameError && <p className="mt-1 text-xs text-clay">{companyNameError}</p>}
+                    </Field>
+                    <Field
+                      label={isZh ? '主营产品/品类' : 'Main Product Category'}
+                      hint={
+                        isZh
+                          ? '建议写 1-3 个主力品类，系统会据此判断适合的市场与卖点。'
+                          : 'List 1-3 core categories so the system can assess market fit and selling points.'
+                      }
+                    >
+                      <input
+                        className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
+                        value={leadData.step1.productCategory}
+                        onChange={(e) => handleProductCategoryChange(e.target.value)}
+                        onBlur={handleProductCategoryBlur}
+                        placeholder={isZh ? '例如：纸巾 / 包装材料 / 家居清洁用品' : 'e.g. Tissue paper / Packaging / Home cleaning'}
+                      />
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(isZh
+                          ? ['纸制品 / 包装材料', '家具 / 家居用品', '五金 / 建材']
+                          : ['Tissue paper / Packaging', 'Furniture / Home goods', 'Hardware / Building materials']
+                        ).map((example) => (
+                          <button
+                            key={example}
+                            type="button"
+                            onClick={() => handleProductCategoryChange(example)}
+                            className="rounded-full border border-black/10 bg-sand px-3 py-1 text-xs text-black/65 transition hover:border-moss/40 hover:text-moss"
+                          >
+                            {example}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                        <span className={productCategoryError ? 'text-clay' : 'text-black/50'}>
+                          {productCategoryError ||
+                            (isZh
+                              ? `最多 ${PRODUCT_CATEGORY_MAX_ITEMS} 个品类，支持 / 或逗号分隔`
+                              : `Max ${PRODUCT_CATEGORY_MAX_ITEMS} categories, split with "/" or commas`)}
+                        </span>
+                        <span className="text-black/45">
+                          {leadData.step1.productCategory.trim().length}/{PRODUCT_CATEGORY_MAX_LENGTH}
+                        </span>
+                      </div>
+                    </Field>
+                  </div>
 
-              <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
-                <div className="flex flex-wrap gap-2">
-                  {certOptions.map((cert) => {
-                    const selected = leadData.step1.certifications.includes(cert)
-                    return (
-                      <button
-                        type="button"
-                        key={cert}
-                        onClick={() => toggleCertification(cert)}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                          selected
-                            ? 'border-moss bg-moss text-white'
-                            : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                        }`}
-                      >
-                        {cert}
-                      </button>
-                    )
-                  })}
+                  <Field
+                    label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}
+                    hint={
+                      isZh
+                        ? '选填。填写月产能、产线数或工厂规模，有助于判断你更适合做大客户还是分销客户。'
+                        : 'Optional. Capacity helps us judge whether you are better suited for large buyers or distributors.'
+                    }
+                  >
+                    <input
+                      className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
+                      value={leadData.step1.currentCapacity}
+                      onChange={(e) => handleCapacityChange(e.target.value)}
+                      onBlur={handleCapacityBlur}
+                      placeholder={isZh ? '例如：月产 8000 吨，5 条产线' : 'e.g. 8,000 tons/month, 5 production lines'}
+                    />
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                      <span className={capacityError ? 'text-clay' : 'text-black/50'}>
+                        {capacityError || (isZh ? '选填，建议填写月产能与产线数' : 'Optional: monthly capacity and production lines')}
+                      </span>
+                      <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
+                    </div>
+                  </Field>
+
+                  <Field
+                    label={isZh ? '已有认证' : 'Existing Certifications'}
+                    hint={
+                      isZh
+                        ? '可选。即使暂时没有认证，也可以继续；系统会提示哪些认证更重要。'
+                        : 'Optional. You can continue even without certifications; we will show which ones matter most.'
+                    }
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {certOptions.map((cert) => {
+                        const selected = leadData.step1.certifications.includes(cert)
+                        return (
+                          <button
+                            type="button"
+                            key={cert}
+                            onClick={() => toggleCertification(cert)}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                              selected
+                                ? 'border-moss bg-moss text-white'
+                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
+                            }`}
+                          >
+                            {cert}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </Field>
                 </div>
-              </Field>
+
+                <aside className="space-y-4 rounded-2xl border border-black/10 bg-sand/60 p-4 sm:p-5">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-moss/70">{isZh ? '填写后你将获得' : 'What You Get Next'}</p>
+                    <h3 className="mt-2 text-xl">{isZh ? '一份可直接用来判断方向的 AI 诊断' : 'An AI diagnostic you can act on'}</h3>
+                  </div>
+                  <ul className="space-y-2 text-sm text-black/70">
+                    {(isZh
+                      ? ['优先推荐的海外市场', '你的差异化定位建议', '需要优先补齐的认证方向']
+                      : ['Priority overseas markets', 'Differentiated positioning suggestion', 'Certifications to prioritize']
+                    ).map((item) => (
+                      <li key={item} className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="rounded-2xl border border-black/10 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-black/55">{isZh ? '当前填写摘要' : 'Current Input Summary'}</p>
+                    <div className="mt-3 space-y-3 text-sm text-black/70">
+                      <div>
+                        <p className="text-black/45">{isZh ? '公司名称' : 'Company'}</p>
+                        <p className="mt-1 font-medium text-ink">
+                          {leadData.step1.companyName || (isZh ? '待填写' : 'Pending')}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-black/45">{isZh ? '主营品类' : 'Categories'}</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {categoryItems.length > 0
+                            ? categoryItems.map((item) => <Tag key={item}>{item}</Tag>)
+                            : <Tag>{isZh ? '待填写 1-3 个品类' : 'Add 1-3 categories'}</Tag>}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-black/45">{isZh ? '产能/规模' : 'Capacity'}</p>
+                        <p className="mt-1 font-medium text-ink">
+                          {leadData.step1.currentCapacity || (isZh ? '未填写，系统将按通用能力判断' : 'Not provided, using general assumptions')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
 
               <button
                 onClick={runAnalysis}
@@ -833,7 +965,7 @@ function App() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-                {isZh ? '开始 AI 战略分析' : 'Start AI Strategic Analysis'}
+                {isZh ? '生成市场推荐与定位建议' : 'Generate Market Recommendation'}
               </button>
               {formError && <p className="text-sm text-clay">{formError}</p>}
             </div>
@@ -841,7 +973,12 @@ function App() {
 
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? 'Step 2. AI 战略定位与市场推荐' : 'Step 2. AI Strategy & Positioning'}</h2>
+              <h2 className="text-2xl">{isZh ? '第 2 步：AI 战略定位与市场推荐' : 'Step 2. AI Strategy & Positioning'}</h2>
+              <p className="text-sm text-black/60">
+                {isZh
+                  ? '以下建议基于你刚才填写的公司、品类、产能和认证信息生成。先看主推荐市场，再确认它是否适合你。'
+                  : 'These suggestions are generated from your company, category, capacity, and certification inputs. Start with the primary market recommendation.'}
+              </p>
 
               {analyzing && (
                 <div className="space-y-3">
@@ -853,36 +990,120 @@ function App() {
 
               {!analyzing && ai && (
                 <>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {ai.topMarkets.map((market) => (
-                      <div key={market.country} className="rounded-2xl border border-black/10 bg-sand p-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                          <Globe2 className="h-4 w-4 text-moss" />
-                          {market.country}
+                  <div className="space-y-4 xl:grid xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.9fr)] xl:gap-4 xl:space-y-0">
+                    <div className="space-y-4">
+                      {topMarket && (
+                        <div className="rounded-2xl border border-moss/25 bg-moss/5 p-4 sm:p-5">
+                          <p className="text-xs uppercase tracking-[0.2em] text-moss/70">{isZh ? '主推荐市场' : 'Primary Market'}</p>
+                          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 text-lg font-semibold text-ink">
+                                <Globe2 className="h-5 w-5 text-moss" />
+                                {topMarket.country}
+                              </div>
+                              <p className="mt-2 max-w-xl text-sm leading-relaxed text-black/70">
+                                {getMarketReason(topMarket.country, isZh)}
+                              </p>
+                            </div>
+                            <div className="w-full rounded-2xl bg-white px-4 py-3 text-center shadow-soft sm:w-auto">
+                              <p className="text-3xl font-bold text-moss">{topMarket.fitScore}%</p>
+                              <p className="text-xs text-black/55">{isZh ? '市场匹配度' : 'Market fit score'}</p>
+                            </div>
+                          </div>
                         </div>
-                        <p className="mt-2 text-2xl font-bold text-moss">{market.fitScore}%</p>
-                        <p className="text-xs text-black/60">{isZh ? '市场匹配度' : 'Market fit score'}</p>
+                      )}
+
+                      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                          <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '推荐依据' : 'Why This Recommendation'}</p>
+                          <ul className="mt-3 space-y-2 text-sm text-black/70">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
+                              <span>
+                                {isZh
+                                  ? `你的主营方向：${categoryItems.length > 0 ? categoryItems.join(' / ') : '未填写完整'}`
+                                  : `Your product focus: ${categoryItems.length > 0 ? categoryItems.join(' / ') : 'Incomplete input'}`}
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
+                              <span>
+                                {isZh
+                                  ? `当前产能判断：${leadData.step1.currentCapacity || '按通用工厂能力估算'}`
+                                  : `Capacity assessment: ${leadData.step1.currentCapacity || 'Using general factory assumptions'}`}
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
+                              <span>
+                                {isZh
+                                  ? `认证情况：${leadData.step1.certifications.length > 0 ? leadData.step1.certifications.join(' / ') : '暂未提供，系统已按保守路径建议'}`
+                                  : `Certifications: ${leadData.step1.certifications.length > 0 ? leadData.step1.certifications.join(' / ') : 'Not provided, using a conservative recommendation path'}`}
+                              </span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                          <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '备选市场' : 'Backup Markets'}</p>
+                          <div className="mt-3 space-y-3">
+                            {ai.topMarkets.slice(1).map((market) => (
+                              <div key={market.country} className="flex items-center justify-between rounded-xl bg-sand px-4 py-3">
+                                <div>
+                                  <p className="font-medium text-ink">{market.country}</p>
+                                  <p className="mt-1 text-xs text-black/55">{getMarketReason(market.country, isZh)}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-semibold text-moss">{market.fitScore}%</p>
+                                  <p className="text-[11px] text-black/45">{isZh ? '匹配度' : 'Fit'}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
-                    <p className="text-xs uppercase tracking-[0.2em] text-moss/70">{isZh ? '核心定位' : 'Core Differentiation'}</p>
-                    <p className="mt-2 text-base leading-relaxed">{ai.differentiation}</p>
-                  </div>
+                      <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
+                        <p className="text-xs uppercase tracking-[0.2em] text-moss/70">{isZh ? '建议你怎么卖' : 'How To Position Yourself'}</p>
+                        <p className="mt-2 text-base leading-relaxed">{ai.differentiation}</p>
+                        {ai.valueProps.length > 0 && (
+                          <ul className="mt-4 space-y-2 text-sm text-black/75">
+                            {ai.valueProps.map((item) => (
+                              <li key={item} className="flex items-start gap-2">
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="rounded-2xl border border-black/10 bg-white p-5">
-                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                      <ShieldCheck className="h-4 w-4 text-clay" />
-                      {isZh ? '准入所需认证' : 'Required Certifications'}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {ai.requiredCertifications.map((item) => (
-                        <span key={item} className="rounded-full bg-black/5 px-3 py-1 text-sm text-black/70">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
+                    <aside className="space-y-4">
+                      <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                        <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                          <ShieldCheck className="h-4 w-4 text-clay" />
+                          {isZh ? '优先关注的认证' : 'Certifications To Prioritize'}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {ai.requiredCertifications.map((item) => (
+                            <span key={item} className="rounded-full bg-black/5 px-3 py-1 text-sm text-black/70">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-black/65">{ai.trust}</p>
+                      </div>
+
+                      <div className="rounded-2xl border border-clay/25 bg-clay/5 p-4 sm:p-5">
+                        <p className="text-xs uppercase tracking-[0.18em] text-clay/80">{isZh ? '下一步会发生什么' : 'What Happens Next'}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-black/70">
+                          {isZh
+                            ? '下一步你将确认首发市场。你的选择会直接影响成本估算和后续物料生成内容。'
+                            : 'Next you will confirm the launch market. That choice will directly shape cost estimates and generated materials.'}
+                        </p>
+                      </div>
+                    </aside>
                   </div>
                 </>
               )}
@@ -892,12 +1113,19 @@ function App() {
               </p>
               {analysisError && <p className="text-sm text-clay">{analysisError}</p>}
 
-              <div className="flex justify-end">
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                <button
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 px-4 py-3 text-sm"
+                  onClick={() => setStep(1)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {isZh ? '返回修改信息' : 'Back to Edit Inputs'}
+                </button>
                 <button
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white sm:w-auto"
                   onClick={() => setStep(3)}
                 >
-                  {isZh ? '继续' : 'Continue'}
+                  {isZh ? '确认并进入下一步' : 'Use This Recommendation'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -906,37 +1134,74 @@ function App() {
 
           {step === 3 && ai && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? 'Step 3. 客户意向确认' : 'Step 3. Confirm Target Market'}</h2>
+              <h2 className="text-2xl">{isZh ? '第 3 步：客户意向确认' : 'Step 3. Confirm Target Market'}</h2>
+              <p className="text-sm text-black/60">
+                {isZh
+                  ? '先确定首发市场。这个选择会直接影响下一步的成本估算和生成物料内容。'
+                  : 'Choose the launch market first. This will directly shape the cost estimate and generated materials.'}
+              </p>
 
-              <div className="grid gap-4 lg:grid-cols-3">
-                <div className="space-y-4 lg:col-span-2">
-                  <div
+              <div className="space-y-4 xl:grid xl:grid-cols-[minmax(0,1.3fr)_minmax(260px,0.8fr)] xl:gap-4 xl:space-y-0">
+                <div className="space-y-4">
+                  <button
+                    type="button"
                     onClick={() => setSelectedPath('accept')}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${
-                      selectedPath === 'accept' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
+                    className={`w-full rounded-2xl border p-4 text-left transition sm:p-5 ${
+                      selectedPath === 'accept' ? 'border-moss bg-moss/5 shadow-soft' : 'border-black/10 bg-white'
                     }`}
                   >
-                    <p className="font-semibold">{isZh ? '选项 A：接受 AI 推荐' : 'Option A: Accept AI Recommendation'}</p>
-                    <p className="mt-1 text-sm text-black/60">
-                      {isZh
-                        ? `以 ${ai.topMarkets[0].country} 作为首发市场并继续。`
-                        : `Use ${ai.topMarkets[0].country} as primary launch market and continue.`}
-                    </p>
-                  </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{isZh ? '采用 AI 推荐市场' : 'Use AI Recommended Market'}</p>
+                        <p className="mt-1 text-sm text-black/60">
+                          {isZh
+                            ? `直接以 ${ai.topMarkets[0].country} 作为首发市场，最快进入下一步。`
+                            : `Use ${ai.topMarkets[0].country} as the launch market and move forward quickly.`}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${selectedPath === 'accept' ? 'bg-moss text-white' : 'bg-black/5 text-black/55'}`}>
+                        {isZh ? '推荐' : 'Recommended'}
+                      </span>
+                    </div>
+                    <div className="mt-3 rounded-xl bg-white/80 px-4 py-3 text-sm text-black/70">
+                      <p className="font-medium text-ink">{ai.topMarkets[0].country}</p>
+                      <p className="mt-1">{getMarketReason(ai.topMarkets[0].country, isZh)}</p>
+                    </div>
+                  </button>
 
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setSelectedPath('manual')}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${
-                      selectedPath === 'manual' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
+                    className={`w-full rounded-2xl border p-4 text-left transition sm:p-5 ${
+                      selectedPath === 'manual' ? 'border-moss bg-moss/5 shadow-soft' : 'border-black/10 bg-white'
                     }`}
                   >
-                    <p className="font-semibold">{isZh ? '选项 B：手动输入目标国家' : 'Option B: Enter Your Own Market'}</p>
+                    <p className="font-semibold">{isZh ? '手动指定目标市场' : 'Enter My Own Target Market'}</p>
+                    <p className="mt-1 text-sm text-black/60">
+                      {isZh ? '如果你已有明确方向，可以手动输入目标国家。' : 'If you already have a target in mind, enter it manually.'}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(isZh ? ['加拿大', '德国', '阿联酋'] : ['Canada', 'Germany', 'UAE']).map((market) => (
+                        <button
+                          key={market}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedPath('manual')
+                            handleTargetMarketChange(market)
+                          }}
+                          className="rounded-full border border-black/10 bg-sand px-3 py-1 text-xs text-black/65 transition hover:border-moss/40 hover:text-moss"
+                        >
+                          {market}
+                        </button>
+                      ))}
+                    </div>
                     <input
                       value={leadData.step3.targetMarket}
                       onChange={(e) => handleTargetMarketChange(e.target.value)}
                       onBlur={handleTargetMarketBlur}
                       placeholder={isZh ? '例如：加拿大' : 'e.g. Canada'}
-                      className="mt-3 w-full rounded-xl border border-black/15 px-3 py-2 text-sm outline-none ring-moss/30 focus:ring"
+                      className="mt-3 w-full rounded-xl border border-black/15 px-3 py-3 text-sm outline-none ring-moss/30 focus:ring"
                     />
                     <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
                       <span className={targetMarketError ? 'text-clay' : 'text-black/50'}>
@@ -944,25 +1209,34 @@ function App() {
                       </span>
                       <span className="text-black/45">{leadData.step3.targetMarket.trim().length}/{TARGET_MARKET_MAX_LENGTH}</span>
                     </div>
-                  </div>
+                  </button>
                 </div>
 
-                <aside className="rounded-2xl border border-clay/30 bg-clay/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-clay/80">CTA 1</p>
-                  <h3 className="mt-2 text-xl">
-                    {isZh ? '需要针对目标国家做深度准入调研吗？' : 'Need deep market compliance research?'}
-                  </h3>
-                  <p className="mt-2 text-sm text-black/65">
-                    {isZh
-                      ? '获取针对特定国家的准入要求与竞品分析。'
-                      : 'Get country-specific entry requirements and competitor mapping from our expert team.'}
-                  </p>
-                  <a
-                    href="mailto:hello@factorygoglobal.com?subject=Need%20Deep%20Market%20Research"
-                    className="mt-4 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
-                  >
-                    {isZh ? '联系专家团队' : 'Contact Expert Team'}
-                  </a>
+                <aside className="space-y-4">
+                  <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                    <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? '当前将进入的市场' : 'Market Going Forward'}</p>
+                    <p className="mt-2 text-xl font-semibold text-ink">
+                      {selectedPath === 'accept'
+                        ? ai.topMarkets[0].country
+                        : leadData.step3.targetMarket || (isZh ? '待确认' : 'Pending')}
+                    </p>
+                    <p className="mt-2 text-sm text-black/65">
+                      {isZh
+                        ? '确认后，系统会按这个市场生成成本参考和销售物料。'
+                        : 'After confirmation, cost guidance and materials will use this market.'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-clay/30 bg-clay/5 p-4 sm:p-5">
+                    <p className="text-xs uppercase tracking-[0.18em] text-clay/80">{isZh ? '需要更深调研？' : 'Need Deeper Research?'}</p>
+                    <h3 className="mt-2 text-lg">{isZh ? '获取目标国家准入与竞品分析' : 'Get compliance and competitor analysis'}</h3>
+                    <a
+                      href="mailto:hello@factorygoglobal.com?subject=Need%20Deep%20Market%20Research"
+                      className="mt-4 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white"
+                    >
+                      {isZh ? '联系专家团队' : 'Contact Expert Team'}
+                    </a>
+                  </div>
                 </aside>
               </div>
 
@@ -978,7 +1252,7 @@ function App() {
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
                   onClick={handleStep3Continue}
                 >
-                  {isZh ? '继续' : 'Continue'}
+                  {isZh ? '确认市场并继续' : 'Confirm Market'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -987,14 +1261,18 @@ function App() {
 
           {step === 4 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? 'Step 4. 出海成本概算' : 'Step 4. Cost Framework'}</h2>
-              <p className="text-sm text-black/60">
-                {isZh
-                  ? <>基于 <span className="font-semibold">{currentMarket || '你选择的市场'}</span> 的粗略估算（MVP 阶段）。</>
-                  : <>Estimated for <span className="font-semibold">{currentMarket || 'your selected market'}</span>. MVP uses rough ranges.</>}
-              </p>
+              <h2 className="text-2xl">{isZh ? '第 4 步：出海成本概算' : 'Step 4. Cost Framework'}</h2>
+              <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-moss/70">{isZh ? '先看结论' : 'Quick Read'}</p>
+                <h3 className="mt-2 text-xl">{currentMarket || (isZh ? '目标市场待确认' : 'Target market pending')}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-black/70">
+                  {isZh
+                    ? `当前判断：${getEntryDifficulty(currentMarket, true)}。以下是进入该市场时最值得先关注的 4 个成本项。`
+                    : `Current view: ${getEntryDifficulty(currentMarket, false)}. These are the four cost areas to check first.`}
+                </p>
+              </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                 <InfoCard label={isZh ? '关税预估范围' : 'Estimated Tariff Range'} value={costData.tariff} />
                 <InfoCard
                   label={isZh ? '海空运费级别' : 'Sea/Air Logistics Level'}
@@ -1004,15 +1282,22 @@ function App() {
                 <InfoCard label={isZh ? '认证办理费用区间' : 'Certification Processing Cost'} value={costData.certification} />
               </div>
 
-              <div className="rounded-2xl border border-clay/25 bg-clay/5 p-5">
-                <p className="text-sm text-black/75">
+              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                <p className="text-sm font-semibold text-ink">{isZh ? '怎么看这些数字？' : 'How To Read These Numbers'}</p>
+                <p className="mt-2 text-sm text-black/70">
                   {isZh
-                    ? 'CTA 2：不同 SKU 与 HS 编码对应税率差异较大。'
-                    : 'CTA 2: Specific tax rates vary significantly by exact SKU and HS code.'}
+                    ? '这是 MVP 阶段的方向性估算。真正报价前，仍需确认产品 SKU、HS 编码、认证范围和运输方式。'
+                    : 'These are directional MVP ranges. Before quoting, validate SKU, HS code, certifications, and shipping mode.'}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-clay/25 bg-clay/5 p-4 sm:p-5">
+                <p className="text-sm text-black/75">
+                  {isZh ? '如果你要做准确报价，可以让团队进一步核算到 SKU 级别。' : 'If you need a precise quote, the team can model this down to the SKU level.'}
                 </p>
                 <a
                   href="mailto:hello@factorygoglobal.com?subject=Need%20Accurate%20Export%20Cost%20Quote"
-                  className="mt-3 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
+                  className="mt-3 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white"
                 >
                   {isZh ? '获取精准报价' : 'Get Accurate Cost Quote'}
                 </a>
@@ -1030,7 +1315,7 @@ function App() {
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
                   onClick={() => setStep(5)}
                 >
-                  {isZh ? '继续' : 'Continue'}
+                  {isZh ? '进入物料生成' : 'Continue to Materials'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -1039,7 +1324,18 @@ function App() {
 
           {step === 5 && (
             <div className="space-y-6">
-              <h2 className="text-2xl">{isZh ? 'Step 5. 智能物料生成' : 'Step 5. Smart Material Generation'}</h2>
+              <h2 className="text-2xl">{isZh ? '第 5 步：智能物料生成' : 'Step 5. Smart Material Generation'}</h2>
+              <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
+                <p className="text-sm text-black/70">
+                  {isZh
+                    ? '先补齐主推产品和照片，再生成网站预览或 One-pager。手机端建议一条产品一条产品地完成。'
+                    : 'Complete products and photos first, then generate the website preview or one-pager. On mobile, finish one product at a time.'}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <MiniMetric label={isZh ? '已填产品' : 'Products'} value={`${parsedProducts.length}/${PRODUCT_LIST_MAX}`} />
+                  <MiniMetric label={isZh ? '已补照片产品' : 'Photo-ready'} value={`${filledPhotoGroups}/${PRODUCT_LIST_MAX}`} />
+                </div>
+              </div>
 
               <div className="rounded-2xl border border-black/10 bg-white p-4">
                 <label className="mb-2 block text-sm font-medium">
@@ -1048,6 +1344,14 @@ function App() {
                 <div className="space-y-2">
                   {leadData.step5.productItems.map((item, index) => (
                     <div key={`product-${index}`} className="rounded-xl border border-black/10 bg-sand/55 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-ink">{isZh ? `产品 ${index + 1}` : `Product ${index + 1}`}</p>
+                        <span className="text-xs text-black/50">
+                          {(leadData.step5.productPhotos[index] || []).length >= PRODUCT_PHOTO_MIN
+                            ? isZh ? '已可生成' : 'Ready'
+                            : isZh ? '待补照片' : 'Photos needed'}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <input
                           value={item}
@@ -1068,7 +1372,7 @@ function App() {
                         )}
                       </div>
                       <div className="mt-2">
-                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-black/15 bg-white px-3 py-2 text-xs font-semibold text-black/75">
+                        <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-3 py-3 text-xs font-semibold text-black/75 sm:w-auto">
                           <Upload className="h-3.5 w-3.5" />
                           {isZh ? `上传该产品照片（${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张）` : `Upload photos for this product (${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX})`}
                           <input
@@ -1079,7 +1383,7 @@ function App() {
                             onChange={(e) => handleProductPhotoUpload(index, e)}
                           />
                         </label>
-                        <span className="ml-2 text-xs text-black/50">
+                        <span className="mt-2 block text-xs text-black/50 sm:ml-2 sm:mt-0 sm:inline">
                           {(leadData.step5.productPhotos[index] || []).length}/{PRODUCT_PHOTO_MAX}
                         </span>
                         {(leadData.step5.productPhotos[index] || []).length > 0 && (
@@ -1121,7 +1425,11 @@ function App() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-start gap-2">
+              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                <p className="text-sm font-semibold text-ink">{isZh ? '选择要生成的内容' : 'Choose What To Generate'}</p>
+                <p className="mt-1 text-sm text-black/60">
+                  {isZh ? '建议先生成网站预览，再生成 One-pager PDF。' : 'Start with the website preview, then generate the one-pager PDF.'}
+                </p>
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <button
                     type="button"
@@ -1416,10 +1724,11 @@ function App() {
   )
 }
 
-function Field({ label, children }) {
+function Field({ label, hint, children }) {
   return (
     <label className="space-y-1.5 text-sm text-black/75">
       <span className="font-medium">{label}</span>
+      {hint && <p className="text-xs leading-relaxed text-black/50">{hint}</p>}
       {children}
     </label>
   )
