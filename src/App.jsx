@@ -234,9 +234,9 @@ function App() {
   const primaryImage = leadData.step5.uploadedImages[0]?.url
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-14 pt-8 text-ink md:px-8">
-      <section className="mb-8 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-soft backdrop-blur md:p-8">
-        <div className="mb-4 flex items-start justify-between gap-4">
+    <main className="mx-auto max-w-6xl px-3 pb-14 pt-4 text-ink sm:px-4 md:px-8 md:pt-8">
+      <section className="mb-5 rounded-3xl border border-black/5 bg-white/80 p-4 shadow-soft backdrop-blur md:mb-8 md:p-8">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-moss/70">FactoryGoGlobal AI</p>
             <h1 className="mt-1 text-3xl md:text-4xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
@@ -246,7 +246,7 @@ function App() {
                 : 'Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
@@ -265,23 +265,26 @@ function App() {
           <div className="h-2 rounded-full bg-moss transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="mt-4 grid gap-2 text-xs text-black/55 md:grid-cols-5">
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 text-xs text-black/55 md:grid md:grid-cols-5 md:overflow-visible md:pb-0">
           {stepLabels.map((item, index) => (
-            <div key={item} className={`rounded-lg px-3 py-2 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}>
+            <div
+              key={item}
+              className={`min-w-max rounded-lg px-3 py-2 md:min-w-0 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}
+            >
               {index + 1}. {item}
             </div>
           ))}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-black/5 bg-white/85 p-5 shadow-soft md:p-8">
+      <section className="rounded-3xl border border-black/5 bg-white/85 p-4 shadow-soft md:p-8">
           {step === 1 && (
             <div className="space-y-5">
               <h2 className="text-2xl">Step 1. Basic Information</h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Company Name">
                   <input
-                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-2.5 outline-none ring-moss/30 transition focus:ring"
+                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.companyName}
                     onChange={(e) => updateStep1('companyName', e.target.value)}
                     placeholder="e.g. Zhejiang Eco Paper Co., Ltd"
@@ -289,7 +292,7 @@ function App() {
                 </Field>
                 <Field label="Main Product Category">
                   <input
-                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-2.5 outline-none ring-moss/30 transition focus:ring"
+                    className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.productCategory}
                     onChange={(e) => updateStep1('productCategory', e.target.value)}
                     placeholder="e.g. Tissue paper / Packaging"
@@ -299,7 +302,7 @@ function App() {
 
               <Field label="Current Capacity / Scale">
                 <input
-                  className="w-full rounded-xl border border-black/15 bg-white px-4 py-2.5 outline-none ring-moss/30 transition focus:ring"
+                  className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                   value={leadData.step1.currentCapacity}
                   onChange={(e) => updateStep1('currentCapacity', e.target.value)}
                   placeholder="e.g. 8,000 tons/month, 5 production lines"
@@ -331,7 +334,7 @@ function App() {
               <button
                 onClick={runAnalysis}
                 disabled={analyzing}
-                className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
                 {isZh ? '开始 AI 战略分析' : 'Start AI Strategic Analysis'}
@@ -395,7 +398,7 @@ function App() {
 
               <div className="flex justify-end">
                 <button
-                  className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white sm:w-auto"
                   onClick={() => setStep(3)}
                 >
                   {isZh ? '继续' : 'Continue'}
@@ -411,8 +414,7 @@ function App() {
 
               <div className="grid gap-4 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
-                  <button
-                    type="button"
+                  <div
                     onClick={() => setSelectedPath('accept')}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       selectedPath === 'accept' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
@@ -422,10 +424,9 @@ function App() {
                     <p className="mt-1 text-sm text-black/60">
                       Use {ai.topMarkets[0].country} as primary launch market and continue.
                     </p>
-                  </button>
+                  </div>
 
-                  <button
-                    type="button"
+                  <div
                     onClick={() => setSelectedPath('manual')}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       selectedPath === 'manual' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
@@ -443,7 +444,7 @@ function App() {
                       placeholder="e.g. Canada"
                       className="mt-3 w-full rounded-xl border border-black/15 px-3 py-2 text-sm outline-none ring-moss/30 focus:ring"
                     />
-                  </button>
+                  </div>
                 </div>
 
                 <aside className="rounded-2xl border border-clay/30 bg-clay/5 p-5">
@@ -456,23 +457,23 @@ function App() {
                   </p>
                   <a
                     href="mailto:hello@factorygoglobal.com?subject=Need%20Deep%20Market%20Research"
-                    className="mt-4 inline-block rounded-xl bg-clay px-4 py-2 text-sm font-semibold text-white"
+                    className="mt-4 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
                   >
                     {isZh ? '联系专家团队' : 'Contact Expert Team'}
                   </a>
                 </aside>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                 <button
-                  className="inline-flex items-center gap-2 rounded-xl border border-black/15 px-4 py-2.5 text-sm"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 px-4 py-3 text-sm"
                   onClick={() => setStep(2)}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {isZh ? '返回' : 'Back'}
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
                   onClick={handleStep3Continue}
                   disabled={selectedPath === 'manual' && !leadData.step3.targetMarket}
                 >
@@ -503,22 +504,22 @@ function App() {
                 </p>
                 <a
                   href="mailto:hello@factorygoglobal.com?subject=Need%20Accurate%20Export%20Cost%20Quote"
-                  className="mt-3 inline-block rounded-xl bg-clay px-4 py-2 text-sm font-semibold text-white"
+                  className="mt-3 inline-block w-full rounded-xl bg-clay px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
                 >
                   {isZh ? '获取精准报价' : 'Get Accurate Cost Quote'}
                 </a>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                 <button
-                  className="inline-flex items-center gap-2 rounded-xl border border-black/15 px-4 py-2.5 text-sm"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 px-4 py-3 text-sm"
                   onClick={() => setStep(3)}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {isZh ? '返回' : 'Back'}
                 </button>
                 <button
-                  className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
                   onClick={() => setStep(5)}
                 >
                   {isZh ? '继续' : 'Continue'}
@@ -634,13 +635,13 @@ function App() {
                     href="https://wa.me/0000000000?text=Hi%20FactoryGoGlobal%2C%20I%20want%20to%20discuss%20a%20premium%20export%20site."
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-xl bg-moss px-4 py-2 text-sm font-semibold text-white"
+                    className="w-full rounded-xl bg-moss px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
                   >
                     {isZh ? 'WhatsApp 联系' : 'Connect on WhatsApp'}
                   </a>
                   <a
                     href="mailto:hello@factorygoglobal.com?subject=Premium%20Export%20Service%20Inquiry"
-                    className="rounded-xl border border-moss px-4 py-2 text-sm font-semibold text-moss"
+                    className="w-full rounded-xl border border-moss px-4 py-3 text-center text-sm font-semibold text-moss sm:w-auto"
                   >
                     {isZh ? '邮件联系' : 'Contact via Email'}
                   </a>
