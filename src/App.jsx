@@ -744,13 +744,13 @@ function App() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-3 pb-14 pt-4 text-ink sm:px-4 md:px-8 md:pt-8">
-      <section className="mb-5 rounded-3xl border border-black/5 bg-white/80 p-4 shadow-soft backdrop-blur md:mb-8 md:p-8">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+    <main className="mx-auto max-w-6xl px-3 pb-14 pt-3 text-ink sm:px-4 md:px-8 md:pt-6">
+      <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 shadow-soft backdrop-blur md:mb-6 md:p-6">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-moss/70">FactoryGoGlobal AI</p>
-            <h1 className="mt-1 text-3xl md:text-4xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
-            <p className="mt-2 max-w-2xl text-sm text-black/65 md:text-base">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-moss/70">FactoryGoGlobal AI</p>
+            <h1 className="mt-1 text-2xl md:text-3xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
+            <p className="mt-1 hidden max-w-2xl text-sm text-black/65 md:block">
               {isZh
                 ? '快速评估出海可行性，找到差异化定位，并生成可直接转化的营销物料。'
                 : 'Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.'}
@@ -771,15 +771,15 @@ function App() {
           </div>
         </div>
 
-        <div className="h-2 rounded-full bg-black/10">
-          <div className="h-2 rounded-full bg-moss transition-all duration-500" style={{ width: `${progress}%` }} />
+        <div className="h-1.5 rounded-full bg-black/10">
+          <div className="h-1.5 rounded-full bg-moss transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 text-xs text-black/55 md:grid md:grid-cols-5 md:overflow-visible md:pb-0">
+        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 text-[11px] text-black/55 md:grid md:grid-cols-5 md:gap-2 md:overflow-visible md:pb-0 md:text-xs">
           {stepLabels.map((item, index) => (
             <div
               key={item}
-              className={`min-w-max rounded-lg px-3 py-2 md:min-w-0 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}
+              className={`min-w-max rounded-lg px-2.5 py-1.5 md:min-w-0 md:px-3 md:py-2 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}
             >
               {index + 1}. {item}
             </div>
@@ -794,18 +794,15 @@ function App() {
               <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
                 <p className="text-sm text-black/70">
                   {isZh
-                    ? '先填写 3 项基础信息，系统会据此生成市场推荐、定位建议和后续物料方向。'
-                    : 'Provide 3 core inputs first. We will use them to generate market recommendations, positioning, and material direction.'}
+                    ? '填写公司、品类和产能后，即可生成市场推荐。'
+                    : 'Enter company, category, and capacity to generate market recommendations.'}
                 </p>
               </div>
 
               <div className="space-y-4 xl:grid xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] xl:gap-5 xl:space-y-0">
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <Field
-                      label={isZh ? '公司名称' : 'Company Name'}
-                      hint={isZh ? '用于生成对外展示的定位文案与物料标题。' : 'Used in positioning copy and generated materials.'}
-                    >
+                    <Field label={isZh ? '公司名称' : 'Company Name'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                         value={leadData.step1.companyName}
@@ -818,14 +815,7 @@ function App() {
                       </div>
                       {companyNameError && <p className="mt-1 text-xs text-clay">{companyNameError}</p>}
                     </Field>
-                    <Field
-                      label={isZh ? '主营产品/品类' : 'Main Product Category'}
-                      hint={
-                        isZh
-                          ? '建议写 1-3 个主力品类，系统会据此判断适合的市场与卖点。'
-                          : 'List 1-3 core categories so the system can assess market fit and selling points.'
-                      }
-                    >
+                    <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                         value={leadData.step1.productCategory}
@@ -862,14 +852,7 @@ function App() {
                     </Field>
                   </div>
 
-                  <Field
-                    label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}
-                    hint={
-                      isZh
-                        ? '选填。填写月产能、产线数或工厂规模，有助于判断你更适合做大客户还是分销客户。'
-                        : 'Optional. Capacity helps us judge whether you are better suited for large buyers or distributors.'
-                    }
-                  >
+                  <Field label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}>
                     <input
                       className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                       value={leadData.step1.currentCapacity}
@@ -885,14 +868,7 @@ function App() {
                     </div>
                   </Field>
 
-                  <Field
-                    label={isZh ? '已有认证' : 'Existing Certifications'}
-                    hint={
-                      isZh
-                        ? '可选。即使暂时没有认证，也可以继续；系统会提示哪些认证更重要。'
-                        : 'Optional. You can continue even without certifications; we will show which ones matter most.'
-                    }
-                  >
+                  <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
                     <div className="flex flex-wrap gap-2">
                       {certOptions.map((cert) => {
                         const selected = leadData.step1.certifications.includes(cert)
@@ -916,43 +892,20 @@ function App() {
                 </div>
 
                 <aside className="space-y-4 rounded-2xl border border-black/10 bg-sand/60 p-4 sm:p-5">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-moss/70">{isZh ? '填写后你将获得' : 'What You Get Next'}</p>
-                    <h3 className="mt-2 text-xl">{isZh ? '一份可直接用来判断方向的 AI 诊断' : 'An AI diagnostic you can act on'}</h3>
-                  </div>
-                  <ul className="space-y-2 text-sm text-black/70">
-                    {(isZh
-                      ? ['优先推荐的海外市场', '你的差异化定位建议', '需要优先补齐的认证方向']
-                      : ['Priority overseas markets', 'Differentiated positioning suggestion', 'Certifications to prioritize']
-                    ).map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
                   <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-black/55">{isZh ? '当前填写摘要' : 'Current Input Summary'}</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-black/55">{isZh ? '填写后将生成' : 'Next Output'}</p>
                     <div className="mt-3 space-y-3 text-sm text-black/70">
                       <div>
-                        <p className="text-black/45">{isZh ? '公司名称' : 'Company'}</p>
-                        <p className="mt-1 font-medium text-ink">
-                          {leadData.step1.companyName || (isZh ? '待填写' : 'Pending')}
-                        </p>
+                        <p className="font-medium text-ink">{isZh ? '市场推荐' : 'Market Recommendation'}</p>
+                        <p className="mt-1 text-black/60">{isZh ? '优先进入的目标市场' : 'Suggested priority market'}</p>
                       </div>
                       <div>
-                        <p className="text-black/45">{isZh ? '主营品类' : 'Categories'}</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {categoryItems.length > 0
-                            ? categoryItems.map((item) => <Tag key={item}>{item}</Tag>)
-                            : <Tag>{isZh ? '待填写 1-3 个品类' : 'Add 1-3 categories'}</Tag>}
-                        </div>
+                        <p className="font-medium text-ink">{isZh ? '定位建议' : 'Positioning Advice'}</p>
+                        <p className="mt-1 text-black/60">{isZh ? '你适合主打什么卖点' : 'What value proposition to lead with'}</p>
                       </div>
                       <div>
-                        <p className="text-black/45">{isZh ? '产能/规模' : 'Capacity'}</p>
-                        <p className="mt-1 font-medium text-ink">
-                          {leadData.step1.currentCapacity || (isZh ? '未填写，系统将按通用能力判断' : 'Not provided, using general assumptions')}
-                        </p>
+                        <p className="font-medium text-ink">{isZh ? '认证重点' : 'Certification Focus'}</p>
+                        <p className="mt-1 text-black/60">{isZh ? '下一步优先补什么' : 'What to prioritize next'}</p>
                       </div>
                     </div>
                   </div>
