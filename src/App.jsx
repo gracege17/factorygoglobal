@@ -24,7 +24,24 @@ const steps = [
   'Material Output',
 ]
 
-const certOptions = ['ISO 9001', 'CE', 'FSC', 'FDA', 'BSCI', 'None']
+const certOptions = ['ISO 9001', 'CE', 'FSC', 'FDA', 'BSCI', 'SGS / 第三方验厂', 'RoHS', 'REACH', '其他', '暂无']
+const currentMarketOptions = ['中国国内', '北美', '欧洲', '东南亚', '中东', '非洲', '拉美', '日韩', '澳洲', '暂无出口']
+const targetMarketOptions = ['北美', '欧洲', '东南亚', '中东', '非洲', '拉美', '日韩', '澳洲']
+const targetCustomerOptions = ['品牌商', '批发商', '进口商', '分销商', '连锁零售', '电商卖家', '工程客户', '暂不明确']
+const coreAdvantageOptions = [
+  '价格有优势',
+  '交期快',
+  '质量稳定',
+  '认证齐全',
+  '支持 OEM / ODM',
+  '小单灵活',
+  '定制能力强',
+  '产能大',
+  '出口经验丰富',
+  '研发能力强',
+  '其他',
+]
+const productCategorySuggestions = ['纸制品 / 包装材料', '家具 / 家居用品', '五金 / 建材', '清洁用品', '电子产品', '机械设备', '纺织服装', '汽配 / 摩配']
 
 const costReference = {
   usa: {
@@ -66,6 +83,8 @@ const COMPANY_NAME_MAX_LENGTH = 80
 const companyNameAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s&.,'’\-()（）]+$/
 const CAPACITY_MAX_LENGTH = 60
 const capacityAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s,./+\-xX*×()（）]+$/
+const OTHER_TEXT_MAX_LENGTH = 40
+const otherTextAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s/&,+\-.'’()（）]+$/
 const TARGET_MARKET_MAX_LENGTH = 40
 const targetMarketAllowedPattern = /^[\u4e00-\u9fa5A-Za-z\s.'’\-()（）]+$/
 const PRODUCT_LIST_MIN = 3
@@ -111,6 +130,9 @@ const normalizeCompanyName = (raw = '') =>
 const normalizeCapacity = (raw = '') =>
   raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, CAPACITY_MAX_LENGTH)
 
+const normalizeOtherText = (raw = '') =>
+  raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, OTHER_TEXT_MAX_LENGTH)
+
 const normalizeTargetMarket = (raw = '') =>
   raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, TARGET_MARKET_MAX_LENGTH)
 
@@ -149,7 +171,7 @@ const validateProductCategory = (value, isZh) => {
       : 'Only Chinese/English letters, numbers, spaces, /, comma, &, -, and parentheses are allowed.'
   }
 
-  const items = trimmed.split(/[\/、，,]+/).map((item) => item.trim()).filter(Boolean)
+  const items = trimmed.split(/[/、，,]+/).map((item) => item.trim()).filter(Boolean)
   if (items.length > PRODUCT_CATEGORY_MAX_ITEMS) {
     return isZh
       ? `最多填写 ${PRODUCT_CATEGORY_MAX_ITEMS} 个品类，请用 / 或逗号分隔。`
@@ -169,6 +191,28 @@ const validateCapacity = (value, isZh) => {
     return isZh
       ? '产能/规模仅支持中英文、数字和常见单位符号。'
       : 'Capacity/scale only supports Chinese/English letters, numbers, and common unit symbols.'
+  }
+
+  return ''
+}
+
+const validateRequiredSelection = (items, isZh, labelZh, labelEn) => {
+  if (items.length === 0) {
+    return isZh ? `请选择${labelZh}。` : `Please select ${labelEn}.`
+  }
+  return ''
+}
+
+const validateOtherText = (value, isZh, fieldType) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return isZh ? '请补充填写。' : 'Please provide details.'
+  }
+
+  if (!otherTextAllowedPattern.test(trimmed)) {
+    return isZh
+      ? `${fieldType}仅支持中英文、数字、空格和常见符号。`
+      : `${fieldType} only supports Chinese/English letters, numbers, spaces, and common symbols.`
   }
 
   return ''
@@ -256,7 +300,7 @@ const validateProductPhotos = (productItems, productPhotos, isZh) => {
 
 const getCategoryItems = (value = '') =>
   value
-    .split(/[\/、，,]+/)
+    .split(/[/、，,]+/)
     .map((item) => item.trim())
     .filter(Boolean)
 
@@ -312,12 +356,19 @@ function App() {
   const [formError, setFormError] = useState('')
   const [analysisError, setAnalysisError] = useState('')
   const [pdfError, setPdfError] = useState('')
+  const [step1Submitted, setStep1Submitted] = useState(false)
   const [companyNameError, setCompanyNameError] = useState('')
   const [companyNameTouched, setCompanyNameTouched] = useState(false)
   const [productCategoryError, setProductCategoryError] = useState('')
   const [productCategoryTouched, setProductCategoryTouched] = useState(false)
   const [capacityError, setCapacityError] = useState('')
   const [capacityTouched, setCapacityTouched] = useState(false)
+  const [currentMarketsError, setCurrentMarketsError] = useState('')
+  const [targetMarketsError, setTargetMarketsError] = useState('')
+  const [targetCustomersError, setTargetCustomersError] = useState('')
+  const [coreAdvantagesError, setCoreAdvantagesError] = useState('')
+  const [certOtherError, setCertOtherError] = useState('')
+  const [coreAdvantageOtherError, setCoreAdvantageOtherError] = useState('')
   const [targetMarketError, setTargetMarketError] = useState('')
   const [targetMarketTouched, setTargetMarketTouched] = useState(false)
   const [productListError, setProductListError] = useState('')
@@ -335,6 +386,12 @@ function App() {
       productCategory: '',
       currentCapacity: '',
       certifications: [],
+      certificationOther: '',
+      currentMarkets: [],
+      targetMarkets: [],
+      targetCustomers: [],
+      coreAdvantages: [],
+      coreAdvantageOther: '',
     },
     step2: {
       aiPositioning: null,
@@ -373,6 +430,42 @@ function App() {
         [field]: value,
       },
     }))
+  }
+
+  const toggleExclusiveMultiSelect = (field, value, max, exclusiveValue) => {
+    setLeadData((prev) => {
+      const current = prev.step1[field]
+      const exists = current.includes(value)
+
+      if (exists) {
+        return {
+          ...prev,
+          step1: {
+            ...prev.step1,
+            [field]: current.filter((item) => item !== value),
+          },
+        }
+      }
+
+      if (value === exclusiveValue) {
+        return {
+          ...prev,
+          step1: {
+            ...prev.step1,
+            [field]: [value],
+          },
+        }
+      }
+
+      const next = current.filter((item) => item !== exclusiveValue)
+      return {
+        ...prev,
+        step1: {
+          ...prev.step1,
+          [field]: next.length >= max ? [...next.slice(1), value] : [...next, value],
+        },
+      }
+    })
   }
 
   const handleProductCategoryChange = (value) => {
@@ -415,6 +508,24 @@ function App() {
   const handleCapacityBlur = () => {
     setCapacityTouched(true)
     setCapacityError(validateCapacity(leadData.step1.currentCapacity, isZh))
+  }
+
+  const handleCertificationOtherChange = (value) => {
+    const normalized = normalizeOtherText(value)
+    updateStep1('certificationOther', normalized)
+
+    if (leadData.step1.certifications.includes('其他')) {
+      setCertOtherError(validateOtherText(normalized, isZh, isZh ? '认证补充信息' : 'Certification details'))
+    }
+  }
+
+  const handleCoreAdvantageOtherChange = (value) => {
+    const normalized = normalizeOtherText(value)
+    updateStep1('coreAdvantageOther', normalized)
+
+    if (leadData.step1.coreAdvantages.includes('其他')) {
+      setCoreAdvantageOtherError(validateOtherText(normalized, isZh, isZh ? '优势补充信息' : 'Advantage details'))
+    }
   }
 
   const handleTargetMarketChange = (value) => {
@@ -543,6 +654,68 @@ function App() {
   }, [capacityTouched, isZh, leadData.step1.currentCapacity])
 
   useEffect(() => {
+    setCurrentMarketsError(
+      validateRequiredSelection(
+        leadData.step1.currentMarkets,
+        isZh,
+        '当前主要销售市场',
+        'your current sales markets',
+      ),
+    )
+  }, [isZh, leadData.step1.currentMarkets])
+
+  useEffect(() => {
+    setTargetMarketsError(
+      validateRequiredSelection(
+        leadData.step1.targetMarkets,
+        isZh,
+        '想重点开发的目标市场',
+        'your target markets',
+      ),
+    )
+  }, [isZh, leadData.step1.targetMarkets])
+
+  useEffect(() => {
+    setTargetCustomersError(
+      validateRequiredSelection(
+        leadData.step1.targetCustomers,
+        isZh,
+        '目标客户类型',
+        'your target customers',
+      ),
+    )
+  }, [isZh, leadData.step1.targetCustomers])
+
+  useEffect(() => {
+    setCoreAdvantagesError(
+      validateRequiredSelection(
+        leadData.step1.coreAdvantages,
+        isZh,
+        '核心竞争优势',
+        'your core advantages',
+      ),
+    )
+  }, [isZh, leadData.step1.coreAdvantages])
+
+  useEffect(() => {
+    if (!leadData.step1.certifications.includes('其他')) {
+      setCertOtherError('')
+      return
+    }
+    setCertOtherError(validateOtherText(leadData.step1.certificationOther, isZh, isZh ? '认证补充信息' : 'Certification details'))
+  }, [isZh, leadData.step1.certificationOther, leadData.step1.certifications])
+
+  useEffect(() => {
+    if (!leadData.step1.coreAdvantages.includes('其他')) {
+      setCoreAdvantageOtherError('')
+      return
+    }
+    setCoreAdvantageOtherError(
+      validateOtherText(leadData.step1.coreAdvantageOther, isZh, isZh ? '优势补充信息' : 'Advantage details'),
+    )
+  }, [isZh, leadData.step1.coreAdvantageOther, leadData.step1.coreAdvantages])
+
+  useEffect(() => {
     if (!targetMarketTouched || selectedPath !== 'manual') {
       return
     }
@@ -559,13 +732,33 @@ function App() {
   const toggleCertification = (cert) => {
     setLeadData((prev) => {
       const exists = prev.step1.certifications.includes(cert)
+      if (exists) {
+        return {
+          ...prev,
+          step1: {
+            ...prev.step1,
+            certifications: prev.step1.certifications.filter((item) => item !== cert),
+            certificationOther: cert === '其他' ? '' : prev.step1.certificationOther,
+          },
+        }
+      }
+
+      if (cert === '暂无') {
+        return {
+          ...prev,
+          step1: {
+            ...prev.step1,
+            certifications: ['暂无'],
+            certificationOther: '',
+          },
+        }
+      }
+
       return {
         ...prev,
         step1: {
           ...prev.step1,
-          certifications: exists
-            ? prev.step1.certifications.filter((item) => item !== cert)
-            : [...prev.step1.certifications, cert],
+          certifications: [...prev.step1.certifications.filter((item) => item !== '暂无'), cert],
         },
       }
     })
@@ -579,18 +772,71 @@ function App() {
     const companyNameValidation = validateCompanyName(leadData.step1.companyName, isZh)
     const productCategoryValidation = validateProductCategory(leadData.step1.productCategory, isZh)
     const capacityValidation = validateCapacity(leadData.step1.currentCapacity, isZh)
-    if (companyNameValidation || productCategoryValidation || capacityValidation) {
-      setFormError(isZh ? '请先填写公司名称和主营品类。' : 'Please enter company name and product category to continue.')
+    const currentMarketsValidation = validateRequiredSelection(
+      leadData.step1.currentMarkets,
+      isZh,
+      '当前主要销售市场',
+      'your current sales markets',
+    )
+    const targetMarketsValidation = validateRequiredSelection(
+      leadData.step1.targetMarkets,
+      isZh,
+      '想重点开发的目标市场',
+      'your target markets',
+    )
+    const targetCustomersValidation = validateRequiredSelection(
+      leadData.step1.targetCustomers,
+      isZh,
+      '目标客户类型',
+      'your target customers',
+    )
+    const coreAdvantagesValidation = validateRequiredSelection(
+      leadData.step1.coreAdvantages,
+      isZh,
+      '核心竞争优势',
+      'your core advantages',
+    )
+    const certOtherValidation = leadData.step1.certifications.includes('其他')
+      ? validateOtherText(leadData.step1.certificationOther, isZh, isZh ? '认证补充信息' : 'Certification details')
+      : ''
+    const coreAdvantageOtherValidation = leadData.step1.coreAdvantages.includes('其他')
+      ? validateOtherText(leadData.step1.coreAdvantageOther, isZh, isZh ? '优势补充信息' : 'Advantage details')
+      : ''
+
+    if (
+      companyNameValidation ||
+      productCategoryValidation ||
+      capacityValidation ||
+      currentMarketsValidation ||
+      targetMarketsValidation ||
+      targetCustomersValidation ||
+      coreAdvantagesValidation ||
+      certOtherValidation ||
+      coreAdvantageOtherValidation
+    ) {
+      setStep1Submitted(true)
+      setFormError(
+        isZh
+          ? '请先补充完整基础信息后再生成 AI 战略建议。'
+          : 'Please complete the required inputs before generating the AI strategy.',
+      )
       setCompanyNameTouched(true)
       setCompanyNameError(companyNameValidation)
       setProductCategoryTouched(true)
       setProductCategoryError(productCategoryValidation)
       setCapacityTouched(true)
       setCapacityError(capacityValidation)
+      setCurrentMarketsError(currentMarketsValidation)
+      setTargetMarketsError(targetMarketsValidation)
+      setTargetCustomersError(targetCustomersValidation)
+      setCoreAdvantagesError(coreAdvantagesValidation)
+      setCertOtherError(certOtherValidation)
+      setCoreAdvantageOtherError(coreAdvantageOtherValidation)
       return
     }
 
     setFormError('')
+    setStep1Submitted(true)
     setAnalysisError('')
     setAnalyzing(true)
 
@@ -802,8 +1048,8 @@ function App() {
               <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
                 <p className="text-sm text-black/70">
                   {isZh
-                    ? '填写公司、品类和产能后，即可生成市场推荐。'
-                    : 'Enter company, category, and capacity to generate market recommendations.'}
+                    ? '填写以下基础信息，AI 将结合您的产品、市场和优势，为您生成初步的出海战略建议。预计 1 分钟完成。'
+                    : 'Complete the inputs below and AI will generate an initial export strategy based on your products, markets, and strengths.'}
                 </p>
               </div>
 
@@ -831,10 +1077,7 @@ function App() {
                         placeholder={isZh ? '例如：纸巾 / 包装材料 / 家居清洁用品' : 'e.g. Tissue paper / Packaging / Home cleaning'}
                       />
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {(isZh
-                          ? ['纸制品 / 包装材料', '家具 / 家居用品', '五金 / 建材']
-                          : ['Tissue paper / Packaging', 'Furniture / Home goods', 'Hardware / Building materials']
-                        ).map((example) => (
+                        {productCategorySuggestions.map((example) => (
                           <button
                             key={example}
                             type="button"
@@ -869,7 +1112,10 @@ function App() {
                     />
                     <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
                       <span className={capacityError ? 'text-clay' : 'text-black/50'}>
-                        {capacityError || (isZh ? '选填，建议填写月产能与产线数' : 'Optional: monthly capacity and production lines')}
+                        {capacityError ||
+                          (isZh
+                            ? '选填，建议填写月产能、日产能、工厂面积或产线数量'
+                            : 'Optional: monthly capacity, daily output, facility size, or production lines')}
                       </span>
                       <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
                     </div>
@@ -895,6 +1141,146 @@ function App() {
                         )
                       })}
                     </div>
+                    {leadData.step1.certifications.includes('其他') && (
+                      <div className="mt-3">
+                        <input
+                          className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
+                          value={leadData.step1.certificationOther}
+                          onChange={(e) => handleCertificationOtherChange(e.target.value)}
+                          placeholder={isZh ? '请补充认证名称' : 'Please specify the certification'}
+                        />
+                        <div className="mt-1 flex items-center justify-between text-xs">
+                          <span className={certOtherError ? 'text-clay' : 'text-black/50'}>
+                            {certOtherError || (isZh ? '例如：Sedex / UL / ETL' : 'e.g. Sedex / UL / ETL')}
+                          </span>
+                          <span className="text-black/45">
+                            {leadData.step1.certificationOther.trim().length}/{OTHER_TEXT_MAX_LENGTH}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </Field>
+
+                  <Field
+                    label={isZh ? '当前主要销售市场' : 'Current Sales Markets'}
+                    hint={isZh ? '最多选择 3 项，帮助 AI 判断您目前已有基础的市场方向' : 'Choose up to 3 to show where you already have traction'}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {currentMarketOptions.map((market) => {
+                        const selected = leadData.step1.currentMarkets.includes(market)
+                        return (
+                          <button
+                            type="button"
+                            key={market}
+                            onClick={() => toggleExclusiveMultiSelect('currentMarkets', market, 3, '暂无出口')}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                              selected
+                                ? 'border-moss bg-moss text-white'
+                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
+                            }`}
+                          >
+                            {market}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {step1Submitted && currentMarketsError && <p className="mt-1 text-xs text-clay">{currentMarketsError}</p>}
+                  </Field>
+
+                  <Field
+                    label={isZh ? '想重点开发的目标市场' : 'Target Markets to Develop'}
+                    hint={isZh ? '最多选择 3 项，建议选择 1-3 个最想重点开发的市场' : 'Choose up to 3 priority markets to focus on'}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {targetMarketOptions.map((market) => {
+                        const selected = leadData.step1.targetMarkets.includes(market)
+                        return (
+                          <button
+                            type="button"
+                            key={market}
+                            onClick={() => toggleExclusiveMultiSelect('targetMarkets', market, 3, '__none__')}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                              selected
+                                ? 'border-moss bg-moss text-white'
+                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
+                            }`}
+                          >
+                            {market}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {step1Submitted && targetMarketsError && <p className="mt-1 text-xs text-clay">{targetMarketsError}</p>}
+                  </Field>
+
+                  <Field
+                    label={isZh ? '您更想开发哪类客户？' : 'Target Customer Types'}
+                    hint={isZh ? '最多选择 3 项，AI 会根据客户类型推荐更适合的销售路径' : 'Choose up to 3 customer types to shape the route-to-market advice'}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {targetCustomerOptions.map((customer) => {
+                        const selected = leadData.step1.targetCustomers.includes(customer)
+                        return (
+                          <button
+                            type="button"
+                            key={customer}
+                            onClick={() => toggleExclusiveMultiSelect('targetCustomers', customer, 3, '暂不明确')}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                              selected
+                                ? 'border-moss bg-moss text-white'
+                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
+                            }`}
+                          >
+                            {customer}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {step1Submitted && targetCustomersError && <p className="mt-1 text-xs text-clay">{targetCustomersError}</p>}
+                  </Field>
+
+                  <Field
+                    label={isZh ? '您觉得自己的核心竞争优势是？' : 'Core Competitive Advantages'}
+                    hint={isZh ? '最多选择 3 项，AI 会据此提炼您的出海定位和核心卖点' : 'Choose up to 3 strengths so AI can sharpen your positioning'}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {coreAdvantageOptions.map((advantage) => {
+                        const selected = leadData.step1.coreAdvantages.includes(advantage)
+                        return (
+                          <button
+                            type="button"
+                            key={advantage}
+                            onClick={() => toggleExclusiveMultiSelect('coreAdvantages', advantage, 3, '__none__')}
+                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                              selected
+                                ? 'border-moss bg-moss text-white'
+                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
+                            }`}
+                          >
+                            {advantage}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {leadData.step1.coreAdvantages.includes('其他') && (
+                      <div className="mt-3">
+                        <input
+                          className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
+                          value={leadData.step1.coreAdvantageOther}
+                          onChange={(e) => handleCoreAdvantageOtherChange(e.target.value)}
+                          placeholder={isZh ? '请补充您的优势' : 'Please specify your advantage'}
+                        />
+                        <div className="mt-1 flex items-center justify-between text-xs">
+                          <span className={coreAdvantageOtherError ? 'text-clay' : 'text-black/50'}>
+                            {coreAdvantageOtherError || (isZh ? '例如：快速打样 / 海外仓支持' : 'e.g. rapid sampling / local warehousing')}
+                          </span>
+                          <span className="text-black/45">
+                            {leadData.step1.coreAdvantageOther.trim().length}/{OTHER_TEXT_MAX_LENGTH}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {step1Submitted && coreAdvantagesError && <p className="mt-1 text-xs text-clay">{coreAdvantagesError}</p>}
                   </Field>
               </div>
 
@@ -904,7 +1290,7 @@ function App() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-                {isZh ? '生成市场推荐与定位建议' : 'Generate Market Recommendation'}
+                {isZh ? '生成 AI 战略建议' : 'Generate AI Strategy'}
               </button>
               {formError && <p className="text-sm text-clay">{formError}</p>}
             </div>
@@ -915,8 +1301,8 @@ function App() {
               <h2 className="text-2xl">{isZh ? '第 2 步：AI 战略定位与市场推荐' : 'Step 2. AI Strategy & Positioning'}</h2>
               <p className="text-sm text-black/60">
                 {isZh
-                  ? '以下建议基于你刚才填写的公司、品类、产能和认证信息生成。先看主推荐市场，再确认它是否适合你。'
-                  : 'These suggestions are generated from your company, category, capacity, and certification inputs. Start with the primary market recommendation.'}
+                  ? '以下建议基于你刚才填写的产品、市场、客户和竞争优势生成。先看主推荐市场，再确认它是否适合你。'
+                  : 'These suggestions are generated from your product, market, customer, and advantage inputs. Start with the primary market recommendation.'}
               </p>
 
               {analyzing && (
@@ -968,16 +1354,28 @@ function App() {
                               <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
                               <span>
                                 {isZh
-                                  ? `当前产能判断：${leadData.step1.currentCapacity || '按通用工厂能力估算'}`
-                                  : `Capacity assessment: ${leadData.step1.currentCapacity || 'Using general factory assumptions'}`}
+                                  ? `现有市场基础：${leadData.step1.currentMarkets.length > 0 ? leadData.step1.currentMarkets.join(' / ') : '暂无出口'}`
+                                  : `Current market base: ${leadData.step1.currentMarkets.length > 0 ? leadData.step1.currentMarkets.join(' / ') : 'No export yet'}`}
                               </span>
                             </li>
                             <li className="flex items-start gap-2">
                               <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
                               <span>
                                 {isZh
-                                  ? `认证情况：${leadData.step1.certifications.length > 0 ? leadData.step1.certifications.join(' / ') : '暂未提供，系统已按保守路径建议'}`
-                                  : `Certifications: ${leadData.step1.certifications.length > 0 ? leadData.step1.certifications.join(' / ') : 'Not provided, using a conservative recommendation path'}`}
+                                  ? `目标客户与优势：${[
+                                      ...leadData.step1.targetCustomers,
+                                      ...leadData.step1.coreAdvantages.filter((item) => item !== '其他'),
+                                      leadData.step1.coreAdvantageOther,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' / ')}`
+                                  : `Target customers and strengths: ${[
+                                      ...leadData.step1.targetCustomers,
+                                      ...leadData.step1.coreAdvantages.filter((item) => item !== '其他'),
+                                      leadData.step1.coreAdvantageOther,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' / ')}`}
                               </span>
                             </li>
                           </ul>

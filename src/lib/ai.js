@@ -1,58 +1,111 @@
-export const createMockAI = ({ productCategory, certifications, companyName }, lang = 'en') => {
+const marketLabelMap = {
+  '北美': 'USA',
+  '欧洲': 'Germany',
+  '东南亚': 'Vietnam',
+  '中东': 'UAE',
+}
+
+const marketScoreBase = {
+  USA: 84,
+  Germany: 82,
+  Vietnam: 78,
+  UAE: 77,
+}
+
+const buildTopMarkets = (targetMarkets = [], certifications = [], currentMarkets = [], lang = 'en') => {
+  const isZh = lang === 'zh'
+  const selected = targetMarkets
+    .map((item) => marketLabelMap[item])
+    .filter(Boolean)
+
+  const uniqueMarkets = selected.length > 0 ? [...new Set(selected)] : ['USA', 'Germany', 'UAE']
+
+  return uniqueMarkets.slice(0, 3).map((country, index) => {
+    let fitScore = marketScoreBase[country] || 76
+
+    if (country === 'Germany' && certifications.includes('FSC')) fitScore += 6
+    if (country === 'Germany' && certifications.includes('CE')) fitScore += 2
+    if (country === 'USA' && currentMarkets.includes(isZh ? '北美' : 'North America')) fitScore += 4
+    if (country === 'UAE' && currentMarkets.includes(isZh ? '中东' : 'Middle East')) fitScore += 4
+    if (country === 'Vietnam' && currentMarkets.includes(isZh ? '东南亚' : 'Southeast Asia')) fitScore += 4
+
+    return { country, fitScore: Math.min(96, fitScore - index * 2) }
+  })
+}
+
+export const createMockAI = ({
+  productCategory,
+  certifications = [],
+  companyName,
+  currentMarkets = [],
+  targetMarkets = [],
+  targetCustomers = [],
+  coreAdvantages = [],
+  coreAdvantageOther = '',
+}, lang = 'en') => {
   const product = productCategory.toLowerCase()
   const hasFSC = certifications.includes('FSC')
   const isZh = lang === 'zh'
+  const topMarkets = buildTopMarkets(targetMarkets, certifications, currentMarkets, lang)
+  const strengths = [...coreAdvantages.filter((item) => item !== '其他'), coreAdvantageOther].filter(Boolean)
+  const primaryCustomer = targetCustomers[0]
+
+  const trustText = certifications.length > 0 && !certifications.includes('暂无')
+    ? isZh
+      ? `已有 ${certifications.filter((item) => item !== '其他').join(' / ')} 等背书，建议围绕信任与稳定交付组织页面表达。`
+      : `Existing trust signals such as ${certifications.filter((item) => item !== '其他').join(' / ')} should be used in the go-to-market story.`
+    : isZh
+      ? '建议尽快补强认证或第三方背书，以提高目标市场信任度。'
+      : 'Recommend strengthening certifications or third-party verification to improve trust in the target market.'
 
   if (product.includes('paper') || product.includes('tissue') || product.includes('卫生纸')) {
     return {
-      topMarkets: [
-        { country: 'Germany', fitScore: 91 },
-        { country: 'UAE', fitScore: 84 },
-        { country: 'Vietnam', fitScore: 79 },
-      ],
+      topMarkets,
       differentiation: isZh
-        ? '避开同质化红海市场，主打 FSC 认证竹浆环保纸，以稳定工业供货能力和更低生命周期影响建立差异化。'
-        : 'Avoid red-ocean commodity tissue. Position as FSC-certified bamboo pulp hygiene paper with stable industrial supply and lower lifecycle footprint.',
+        ? `建议避开纯价格战，围绕${primaryCustomer || '进口商和分销商'}主打环保纸品、稳定供货和长期复购场景。`
+        : `Avoid a pure price fight. Position around eco paper supply, repeat-order reliability, and a clear fit for ${primaryCustomer || 'importers and distributors'}.`,
       requiredCertifications: ['FSC Chain of Custody', 'REACH (if chemicals used)', 'ISO 9001'],
       slogan: isZh
         ? `${companyName || '你的工厂'}，面向增长市场的可持续纸品合作伙伴`
         : `${companyName || 'Your Factory'}, Sustainable Paper Partner for Fast-Growing Markets`,
       valueProps: isZh
-        ? ['可持续原料，溯源清晰', 'MOQ 灵活，覆盖进口商与分销渠道', '批量供货稳定，质量管控可视化']
+        ? [
+            '可持续原料，溯源清晰',
+            `适合 ${primaryCustomer || '进口商 / 分销商'} 的稳定补货节奏`,
+            strengths[0] || '批量供货稳定，质量管控可视化',
+          ]
         : [
-            'Sustainable raw materials with clear traceability',
-            'Flexible MOQ for importer and distributor channels',
-            'Consistent bulk production with quality checkpoints',
-          ],
+          'Sustainable raw materials with clear traceability',
+          `Built for ${primaryCustomer || 'importer / distributor'} replenishment cycles`,
+          strengths[0] || 'Consistent bulk production with quality checkpoints',
+        ],
       trust: hasFSC
         ? isZh
-          ? '已具备 FSC 信任背书，可加速进入高价值环保采购渠道。'
-          : 'FSC credibility already available, fast-track market messaging possible.'
-        : isZh
-          ? '建议补齐 FSC 认证，以切入高毛利环保采购市场。'
-          : 'Recommend FSC onboarding to unlock high-margin eco buyers.',
+          ? '已具备 FSC 信任背书，可优先切入环保采购与高标准买家渠道。'
+          : 'FSC is already in place, which supports entry into higher-standard eco-oriented channels.'
+        : trustText,
     }
   }
 
   return {
-    topMarkets: [
-      { country: 'USA', fitScore: 88 },
-      { country: 'Germany', fitScore: 83 },
-      { country: 'UAE', fitScore: 78 },
-    ],
+    topMarkets,
     differentiation: isZh
-      ? '建议围绕“稳定交期 + 稳定品质”做定位，重点服务被大型供应商忽视的中型海外买家。'
-      : 'Position around reliable lead time + quality consistency for mid-size overseas buyers that are underserved by giant suppliers.',
+      ? `建议围绕“${strengths.slice(0, 2).join(' + ') || '稳定交期 + 稳定品质'}”做定位，重点服务${primaryCustomer || '海外目标客户'}。`
+      : `Position around "${strengths.slice(0, 2).join(' + ') || 'reliable lead time + quality consistency'}" for ${primaryCustomer || 'your target overseas buyers'}.`,
     requiredCertifications: ['ISO 9001', 'Product-specific compliance for destination market'],
     slogan: isZh ? `${companyName || '你的工厂'} | 稳定可靠的 B2B 供货伙伴` : `${companyName || 'Your Factory'} | Built for Reliable B2B Supply`,
     valueProps: isZh
-      ? ['交付窗口可预测，便于长期复购', '质量与合规记录透明可查', '工厂直连沟通，决策更快']
+      ? [
+          `目标市场优先建议：${targetMarkets.join(' / ') || '北美 / 欧洲 / 中东'}`,
+          `目标客户方向：${targetCustomers.join(' / ') || '品牌商 / 批发商 / 进口商'}`,
+          strengths[0] || '交付窗口可预测，便于长期复购',
+        ]
       : [
-          'Predictable fulfillment windows for repeat buyers',
-          'Transparent quality and compliance records',
-          'Factory-direct communication for faster decisions',
+          `Priority markets: ${targetMarkets.join(' / ') || 'North America / Europe / Middle East'}`,
+          `Target customers: ${targetCustomers.join(' / ') || 'brands / wholesalers / importers'}`,
+          strengths[0] || 'Predictable fulfillment windows for repeat buyers',
         ],
-    trust: isZh ? '定位更清晰后，可有效避开纯价格战。' : 'With clearer niche positioning, this category can avoid pure price wars.',
+    trust: trustText,
   }
 }
 
