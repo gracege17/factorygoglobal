@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -57,9 +57,110 @@ const costReference = {
   },
 }
 
+const PRODUCT_CATEGORY_MAX_LENGTH = 60
+const PRODUCT_CATEGORY_MAX_ITEMS = 3
+const productCategoryAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s/&,+\-、，（）()]+$/
+const COMPANY_NAME_MAX_LENGTH = 80
+const companyNameAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s&.,'’\-()（）]+$/
+const CAPACITY_MAX_LENGTH = 60
+const capacityAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s,./+\-xX*×()（）]+$/
+const TARGET_MARKET_MAX_LENGTH = 40
+const targetMarketAllowedPattern = /^[\u4e00-\u9fa5A-Za-z\s.'’\-()（）]+$/
+
 const getCostData = (market = '') => {
   const key = market.trim().toLowerCase()
   return costReference[key] || costReference.default
+}
+
+const normalizeProductCategory = (raw = '') =>
+  raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, PRODUCT_CATEGORY_MAX_LENGTH)
+
+const normalizeCompanyName = (raw = '') =>
+  raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, COMPANY_NAME_MAX_LENGTH)
+
+const normalizeCapacity = (raw = '') =>
+  raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, CAPACITY_MAX_LENGTH)
+
+const normalizeTargetMarket = (raw = '') =>
+  raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, TARGET_MARKET_MAX_LENGTH)
+
+const validateCompanyName = (value, isZh) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return isZh ? '请填写公司名称。' : 'Please enter your company name.'
+  }
+
+  if (trimmed.length < 2) {
+    return isZh ? '公司名称至少需要 2 个字符。' : 'Company name must be at least 2 characters.'
+  }
+
+  if (!companyNameAllowedPattern.test(trimmed)) {
+    return isZh
+      ? '公司名称仅支持中英文、数字、空格及常见符号（.-&()）。'
+      : 'Company name only supports Chinese/English letters, numbers, spaces, and common symbols (.-&()).'
+  }
+
+  return ''
+}
+
+const validateProductCategory = (value, isZh) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return isZh ? '请填写主营产品/品类。' : 'Please enter your main product category.'
+  }
+
+  if (trimmed.length < 2) {
+    return isZh ? '主营产品/品类至少需要 2 个字符。' : 'Product category must be at least 2 characters.'
+  }
+
+  if (!productCategoryAllowedPattern.test(trimmed)) {
+    return isZh
+      ? '仅支持中英文、数字、空格及 /、,、&、-、括号。'
+      : 'Only Chinese/English letters, numbers, spaces, /, comma, &, -, and parentheses are allowed.'
+  }
+
+  const items = trimmed.split(/[\/、，,]+/).map((item) => item.trim()).filter(Boolean)
+  if (items.length > PRODUCT_CATEGORY_MAX_ITEMS) {
+    return isZh
+      ? `最多填写 ${PRODUCT_CATEGORY_MAX_ITEMS} 个品类，请用 / 或逗号分隔。`
+      : `Up to ${PRODUCT_CATEGORY_MAX_ITEMS} categories are allowed, separated by "/" or commas.`
+  }
+
+  return ''
+}
+
+const validateCapacity = (value, isZh) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return ''
+  }
+
+  if (!capacityAllowedPattern.test(trimmed)) {
+    return isZh
+      ? '产能/规模仅支持中英文、数字和常见单位符号。'
+      : 'Capacity/scale only supports Chinese/English letters, numbers, and common unit symbols.'
+  }
+
+  return ''
+}
+
+const validateTargetMarket = (value, isZh) => {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return isZh ? '请填写目标国家/市场。' : 'Please enter your target country/market.'
+  }
+
+  if (trimmed.length < 2) {
+    return isZh ? '目标国家/市场至少需要 2 个字符。' : 'Target country/market must be at least 2 characters.'
+  }
+
+  if (!targetMarketAllowedPattern.test(trimmed)) {
+    return isZh
+      ? '目标国家/市场仅支持中英文、空格、点、连字符和括号。'
+      : 'Target country/market only supports Chinese/English letters, spaces, dots, hyphens, and parentheses.'
+  }
+
+  return ''
 }
 
 function App() {
@@ -69,6 +170,14 @@ function App() {
   const [formError, setFormError] = useState('')
   const [analysisError, setAnalysisError] = useState('')
   const [pdfError, setPdfError] = useState('')
+  const [companyNameError, setCompanyNameError] = useState('')
+  const [companyNameTouched, setCompanyNameTouched] = useState(false)
+  const [productCategoryError, setProductCategoryError] = useState('')
+  const [productCategoryTouched, setProductCategoryTouched] = useState(false)
+  const [capacityError, setCapacityError] = useState('')
+  const [capacityTouched, setCapacityTouched] = useState(false)
+  const [targetMarketError, setTargetMarketError] = useState('')
+  const [targetMarketTouched, setTargetMarketTouched] = useState(false)
   const [lang, setLang] = useState('en')
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
@@ -113,6 +222,93 @@ function App() {
     }))
   }
 
+  const handleProductCategoryChange = (value) => {
+    const normalized = normalizeProductCategory(value)
+    updateStep1('productCategory', normalized)
+
+    if (productCategoryTouched) {
+      setProductCategoryError(validateProductCategory(normalized, isZh))
+    }
+  }
+
+  const handleProductCategoryBlur = () => {
+    setProductCategoryTouched(true)
+    setProductCategoryError(validateProductCategory(leadData.step1.productCategory, isZh))
+  }
+
+  const handleCompanyNameChange = (value) => {
+    const normalized = normalizeCompanyName(value)
+    updateStep1('companyName', normalized)
+
+    if (companyNameTouched) {
+      setCompanyNameError(validateCompanyName(normalized, isZh))
+    }
+  }
+
+  const handleCompanyNameBlur = () => {
+    setCompanyNameTouched(true)
+    setCompanyNameError(validateCompanyName(leadData.step1.companyName, isZh))
+  }
+
+  const handleCapacityChange = (value) => {
+    const normalized = normalizeCapacity(value)
+    updateStep1('currentCapacity', normalized)
+
+    if (capacityTouched) {
+      setCapacityError(validateCapacity(normalized, isZh))
+    }
+  }
+
+  const handleCapacityBlur = () => {
+    setCapacityTouched(true)
+    setCapacityError(validateCapacity(leadData.step1.currentCapacity, isZh))
+  }
+
+  const handleTargetMarketChange = (value) => {
+    const normalized = normalizeTargetMarket(value)
+    setLeadData((prev) => ({
+      ...prev,
+      step3: { targetMarket: normalized },
+    }))
+    if (targetMarketTouched) {
+      setTargetMarketError(validateTargetMarket(normalized, isZh))
+    }
+  }
+
+  const handleTargetMarketBlur = () => {
+    setTargetMarketTouched(true)
+    setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
+  }
+
+  useEffect(() => {
+    if (!productCategoryTouched) {
+      return
+    }
+
+    setProductCategoryError(validateProductCategory(leadData.step1.productCategory, isZh))
+  }, [isZh, leadData.step1.productCategory, productCategoryTouched])
+
+  useEffect(() => {
+    if (!companyNameTouched) {
+      return
+    }
+    setCompanyNameError(validateCompanyName(leadData.step1.companyName, isZh))
+  }, [companyNameTouched, isZh, leadData.step1.companyName])
+
+  useEffect(() => {
+    if (!capacityTouched) {
+      return
+    }
+    setCapacityError(validateCapacity(leadData.step1.currentCapacity, isZh))
+  }, [capacityTouched, isZh, leadData.step1.currentCapacity])
+
+  useEffect(() => {
+    if (!targetMarketTouched || selectedPath !== 'manual') {
+      return
+    }
+    setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
+  }, [isZh, leadData.step3.targetMarket, selectedPath, targetMarketTouched])
+
   const toggleCertification = (cert) => {
     setLeadData((prev) => {
       const exists = prev.step1.certifications.includes(cert)
@@ -133,8 +329,17 @@ function App() {
       return
     }
 
-    if (!leadData.step1.companyName.trim() || !leadData.step1.productCategory.trim()) {
+    const companyNameValidation = validateCompanyName(leadData.step1.companyName, isZh)
+    const productCategoryValidation = validateProductCategory(leadData.step1.productCategory, isZh)
+    const capacityValidation = validateCapacity(leadData.step1.currentCapacity, isZh)
+    if (companyNameValidation || productCategoryValidation || capacityValidation) {
       setFormError(isZh ? '请先填写公司名称和主营品类。' : 'Please enter company name and product category to continue.')
+      setCompanyNameTouched(true)
+      setCompanyNameError(companyNameValidation)
+      setProductCategoryTouched(true)
+      setProductCategoryError(productCategoryValidation)
+      setCapacityTouched(true)
+      setCapacityError(capacityValidation)
       return
     }
 
@@ -171,11 +376,18 @@ function App() {
   const handleStep3Continue = () => {
     const fallbackMarket = leadData.step2.aiPositioning?.topMarkets?.[0]?.country || ''
     const market = selectedPath === 'accept' ? fallbackMarket : leadData.step3.targetMarket
+    const marketValidation = selectedPath === 'manual' ? validateTargetMarket(leadData.step3.targetMarket, isZh) : ''
+
+    if (marketValidation) {
+      setTargetMarketTouched(true)
+      setTargetMarketError(marketValidation)
+      return
+    }
 
     setLeadData((prev) => ({
       ...prev,
       step3: {
-        targetMarket: market,
+        targetMarket: market.trim(),
       },
     }))
     setStep(4)
@@ -296,17 +508,34 @@ function App() {
                   <input
                     className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.companyName}
-                    onChange={(e) => updateStep1('companyName', e.target.value)}
+                    onChange={(e) => handleCompanyNameChange(e.target.value)}
+                    onBlur={handleCompanyNameBlur}
                     placeholder={isZh ? '例如：浙江某某实业有限公司' : 'e.g. Zhejiang Eco Paper Co., Ltd'}
                   />
+                  <div className="mt-1 flex items-center justify-end text-xs text-black/45">
+                    <span>{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
+                  </div>
+                  {companyNameError && <p className="mt-1 text-xs text-clay">{companyNameError}</p>}
                 </Field>
                 <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                   <input
                     className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.productCategory}
-                    onChange={(e) => updateStep1('productCategory', e.target.value)}
+                    onChange={(e) => handleProductCategoryChange(e.target.value)}
+                    onBlur={handleProductCategoryBlur}
                     placeholder={isZh ? '例如：纸巾 / 包装材料' : 'e.g. Tissue paper / Packaging'}
                   />
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span className={productCategoryError ? 'text-clay' : 'text-black/50'}>
+                      {productCategoryError ||
+                        (isZh
+                          ? `最多 ${PRODUCT_CATEGORY_MAX_ITEMS} 个品类，支持 / 或逗号分隔`
+                          : `Max ${PRODUCT_CATEGORY_MAX_ITEMS} categories, split with "/" or commas`)}
+                    </span>
+                    <span className="text-black/45">
+                      {leadData.step1.productCategory.trim().length}/{PRODUCT_CATEGORY_MAX_LENGTH}
+                    </span>
+                  </div>
                 </Field>
               </div>
 
@@ -314,9 +543,16 @@ function App() {
                 <input
                   className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                   value={leadData.step1.currentCapacity}
-                  onChange={(e) => updateStep1('currentCapacity', e.target.value)}
+                  onChange={(e) => handleCapacityChange(e.target.value)}
+                  onBlur={handleCapacityBlur}
                   placeholder={isZh ? '例如：月产 8000 吨，5 条产线' : 'e.g. 8,000 tons/month, 5 production lines'}
                 />
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                  <span className={capacityError ? 'text-clay' : 'text-black/50'}>
+                    {capacityError || (isZh ? '选填，建议填写月产能与产线数' : 'Optional: monthly capacity and production lines')}
+                  </span>
+                  <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
+                </div>
               </Field>
 
               <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
@@ -447,15 +683,17 @@ function App() {
                     <p className="font-semibold">{isZh ? '选项 B：手动输入目标国家' : 'Option B: Enter Your Own Market'}</p>
                     <input
                       value={leadData.step3.targetMarket}
-                      onChange={(e) =>
-                        setLeadData((prev) => ({
-                          ...prev,
-                          step3: { targetMarket: e.target.value },
-                        }))
-                      }
+                      onChange={(e) => handleTargetMarketChange(e.target.value)}
+                      onBlur={handleTargetMarketBlur}
                       placeholder={isZh ? '例如：加拿大' : 'e.g. Canada'}
                       className="mt-3 w-full rounded-xl border border-black/15 px-3 py-2 text-sm outline-none ring-moss/30 focus:ring"
                     />
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                      <span className={targetMarketError ? 'text-clay' : 'text-black/50'}>
+                        {targetMarketError || (isZh ? '请输入国家名称，例如：加拿大 / 德国' : 'Enter country name, e.g. Canada / Germany')}
+                      </span>
+                      <span className="text-black/45">{leadData.step3.targetMarket.trim().length}/{TARGET_MARKET_MAX_LENGTH}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -489,7 +727,6 @@ function App() {
                 <button
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
                   onClick={handleStep3Continue}
-                  disabled={selectedPath === 'manual' && !leadData.step3.targetMarket}
                 >
                   {isZh ? '继续' : 'Continue'}
                   <ArrowRight className="h-4 w-4" />
