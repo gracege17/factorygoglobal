@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Manrope', sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #161616;
+  background-color: #f7f5f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top right, rgba(161, 90, 58, 0.08), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(37, 84, 74, 0.1), transparent 40%),
+    #f7f5f0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Newsreader', serif;
+  letter-spacing: 0.01em;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
