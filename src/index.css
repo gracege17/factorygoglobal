@@ -79,3 +79,22 @@ a {
   font-size: clamp(1rem, 1.35vw, 1.125rem);
   line-height: 1.65;
 }
+
+.us-web-section {
+  margin-top: 2rem;
+}
+
+.us-web-card {
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .us-web-section {
+    margin-top: 2.75rem;
+  }
+
+  .us-web-card {
+    padding: 1.75rem;
+  }
+}

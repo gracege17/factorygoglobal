@@ -1145,8 +1145,8 @@ function App() {
 
               {websiteGenerated ? (
                 <>
-                <div className="grid gap-5 xl:grid-cols-2">
-                <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <div className="grid gap-7 xl:grid-cols-2">
+                <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-6">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-xl">One-page Marketing Site Preview (US)</h3>
                     <button
@@ -1160,7 +1160,7 @@ function App() {
 
                   <div className="overflow-hidden rounded-2xl border border-black/10">
                     <div
-                      className="relative p-6 text-white"
+                      className="relative p-7 text-white md:p-8"
                       style={{
                         background: primaryImage
                           ? `linear-gradient(110deg, rgba(22,22,22,0.78), rgba(22,22,22,0.45)), url(${primaryImage}) center/cover`
@@ -1172,7 +1172,7 @@ function App() {
                         {usWebsiteCopy.heroTitle}
                       </h4>
                     </div>
-                    <div className="space-y-3 p-5">
+                    <div className="space-y-4 p-6">
                       <p className="text-xs uppercase tracking-[0.18em] text-black/60">Trust Indicators</p>
                       <div className="flex flex-wrap gap-2">
                         <Tag>{leadData.step1.currentCapacity || 'Capacity data pending'}</Tag>
@@ -1200,7 +1200,7 @@ function App() {
                 </div>
               </div>
               </div>
-              <div className="rounded-2xl border border-moss/30 bg-moss/8 p-5">
+              <div className="rounded-2xl border border-moss/30 bg-moss/8 p-6 md:p-7">
                 <p className="text-xs uppercase tracking-[0.2em] text-moss/80">{isZh ? '终极 CTA' : 'Final CTA'}</p>
                 <h3 className="mt-2 text-2xl">
                   {isZh ? '需要高级动效独立站与 Amazon 开店支持？' : 'Need a premium export website + Amazon launch support?'}
@@ -1237,7 +1237,7 @@ function App() {
               )}
 
               {onePagerGenerated ? (
-                <div className="rounded-2xl border border-black/10 bg-white p-4">
+              <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-6">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-xl">{isZh ? 'One-pager PDF 预览' : 'One-pager PDF Preview'}</h3>
                     <button
@@ -1251,7 +1251,7 @@ function App() {
                   </div>
                   {pdfError && <p className="mb-3 text-xs text-clay">{pdfError}</p>}
 
-                  <div ref={pdfRef} className="rounded-2xl border border-black/10 bg-white p-5 text-black">
+                  <div ref={pdfRef} className="rounded-2xl border border-black/10 bg-white p-6 text-black">
                     <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '企业单页简介' : 'Company One-pager'}</p>
                     <h4 className="mt-2 text-2xl">{leadData.step1.companyName || (isZh ? '你的公司名称' : 'Your Company Name')}</h4>
                     <p className="mt-2 text-sm text-black/70">
@@ -1289,9 +1289,9 @@ function App() {
 
       {showFullscreen && websiteGenerated && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 px-4" onClick={() => setShowFullscreen(false)}>
-          <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[90vh] w-full max-w-6xl overflow-auto rounded-3xl bg-white p-6 md:p-8" onClick={(e) => e.stopPropagation()}>
             <div
-              className="relative overflow-hidden rounded-2xl p-10 text-white"
+              className="relative overflow-hidden rounded-2xl p-8 text-white md:p-12"
               style={{
                 background: primaryImage
                   ? `linear-gradient(110deg, rgba(22,22,22,0.78), rgba(22,22,22,0.45)), url(${primaryImage}) center/cover`
@@ -1305,7 +1305,7 @@ function App() {
               </p>
             </div>
 
-            <section className="mt-6 rounded-2xl border border-black/10 bg-sand/40 p-5">
+            <section className="us-web-section us-web-card rounded-2xl border border-black/10 bg-sand/40">
               <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.aboutTitle}</p>
               <h3 className="us-web-heading mt-2">{leadData.step1.companyName || 'Your Company'}</h3>
               <p className="us-web-text mt-2 text-black/75">
@@ -1313,41 +1313,59 @@ function App() {
               </p>
             </section>
 
-            <section className="mt-4">
+            <section className="us-web-section">
               <p className="us-web-subheading text-black/85">{usWebsiteCopy.whyTitle}</p>
-              <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
                 {usWebsiteCopy.whyItems.map((item) => (
-                  <div key={item} className="us-web-text rounded-xl border border-black/10 bg-white p-4 text-black/80">
+                  <div key={item} className="us-web-text rounded-xl border border-black/10 bg-white p-5 text-black/80">
                     {item}
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="mt-6">
+            <section className="us-web-section">
               <p className="us-web-subheading text-black/85">{usWebsiteCopy.productTitle}</p>
-              <div className="mt-3 space-y-4">
+              <div className="mt-4 space-y-3">
                 {productEntries.map((entry) => (
-                  <div key={`${entry.index}-${entry.name}`} className="rounded-2xl border border-black/10 bg-white p-4">
-                    <h4 className="us-web-subheading">{entry.name}</h4>
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
-                        <img
-                          key={`${entry.name}-${photo.url}`}
-                          src={photo.url}
-                          alt={`${entry.name}-${photo.name}`}
-                          className="h-28 w-full rounded-lg border border-black/10 object-cover"
-                        />
-                      ))}
+                  <article
+                    key={`${entry.index}-${entry.name}`}
+                    className="rounded-2xl border border-black/10 bg-white px-4 py-4 md:px-5 md:py-5"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0 md:max-w-[46%]">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-ink px-2 text-xs font-semibold text-white">
+                            {String(entry.index + 1).padStart(2, '0')}
+                          </span>
+                          <h4 className="us-web-subheading truncate">{entry.name}</h4>
+                        </div>
+                        <ul className="mt-3 space-y-1.5 text-sm text-black/70">
+                          <li>MOQ: 1 x 20ft container</li>
+                          <li>Lead time: 25-35 days</li>
+                          <li>Customization: OEM / private label</li>
+                        </ul>
+                      </div>
+
+                      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 md:max-w-[50%]">
+                        {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
+                          <img
+                            key={`${entry.name}-${photo.url}`}
+                            src={photo.url}
+                            alt={`${entry.name}-${photo.name}`}
+                            className="h-24 w-full rounded-lg border border-black/10 object-cover md:h-28"
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             </section>
 
-            <section className="mt-6 rounded-2xl border border-black/10 bg-white p-5">
+            <section className="us-web-section us-web-card rounded-2xl border border-black/10 bg-white">
               <p className="us-web-subheading text-black/85">{usWebsiteCopy.trustTitle}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2.5">
                 <Tag>{leadData.step1.currentCapacity || 'Capacity pending'}</Tag>
                 {leadData.step1.certifications.length > 0
                   ? leadData.step1.certifications.map((item) => <Tag key={item}>{item}</Tag>)
@@ -1355,13 +1373,13 @@ function App() {
               </div>
             </section>
 
-            <section className="mt-6 rounded-2xl border border-moss/30 bg-moss/8 p-5">
+            <section className="us-web-section us-web-card rounded-2xl border border-moss/30 bg-moss/8">
               <p className="us-web-subheading text-moss/90">{usWebsiteCopy.contactTitle}</p>
               <h3 className="us-web-heading mt-2">Contact Factory Team</h3>
               <p className="us-web-text mt-2 text-black/75">
                 {usWebsiteCopy.contactText}
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap gap-3">
                 <a
                   href="mailto:hello@factorygoglobal.com?subject=FactoryGoGlobal%20Inquiry"
                   className="w-full rounded-xl bg-ink px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
