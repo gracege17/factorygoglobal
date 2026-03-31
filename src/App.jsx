@@ -72,6 +72,28 @@ const getCostData = (market = '') => {
   return costReference[key] || costReference.default
 }
 
+const getLocalizedLogisticsLevel = (level, isZh) => {
+  const ranges = {
+    High: '8%-15%',
+    Medium: '5%-10%',
+    Low: '3%-7%',
+  }
+  const range = ranges[level]
+  if (!range) return level
+
+  if (!isZh) {
+    return `${level} (~${range} of cargo value)`
+  }
+
+  const zhLevelMap = {
+    High: '高',
+    Medium: '中',
+    Low: '低',
+  }
+  const zhLevel = zhLevelMap[level] || level
+  return `${zhLevel}（约占货值 ${range}）`
+}
+
 const normalizeProductCategory = (raw = '') =>
   raw.replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, PRODUCT_CATEGORY_MAX_LENGTH)
 
@@ -746,7 +768,10 @@ function App() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <InfoCard label={isZh ? '关税预估范围' : 'Estimated Tariff Range'} value={costData.tariff} />
-                <InfoCard label={isZh ? '海空运费级别' : 'Sea/Air Logistics Level'} value={costData.logistics} />
+                <InfoCard
+                  label={isZh ? '海空运费级别' : 'Sea/Air Logistics Level'}
+                  value={getLocalizedLogisticsLevel(costData.logistics, isZh)}
+                />
                 <InfoCard label={isZh ? '平台入驻费用区间' : 'Mainstream Platform Entry Cost'} value={costData.platform} />
                 <InfoCard label={isZh ? '认证办理费用区间' : 'Certification Processing Cost'} value={costData.certification} />
               </div>
