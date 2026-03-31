@@ -1063,6 +1063,7 @@ function App() {
                     }
                   >
                   <div className="grid gap-4 md:grid-cols-2">
+                    <QuestionCard>
                     <Field label={isZh ? '公司名称' : 'Company Name'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1078,6 +1079,8 @@ function App() {
                         <span className="text-black/45">{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
                       </div>
                     </Field>
+                    </QuestionCard>
+                    <QuestionCard>
                     <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1115,8 +1118,10 @@ function App() {
                         </span>
                       </div>
                     </Field>
+                    </QuestionCard>
                   </div>
 
+                  <QuestionCard>
                   <Field label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}>
                     <input
                       className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1135,6 +1140,7 @@ function App() {
                       <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
                     </div>
                   </Field>
+                  </QuestionCard>
                   </SectionCard>
 
                   <SectionCard
@@ -1145,6 +1151,7 @@ function App() {
                         : 'This section determines which markets AI should prioritize for you.'
                     }
                   >
+                  <QuestionCard>
                   <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
                     <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
                       <div className="flex flex-wrap gap-2">
@@ -1177,7 +1184,9 @@ function App() {
                       </div>
                     )}
                   </Field>
+                  </QuestionCard>
 
+                  <QuestionCard>
                   <Field
                     label={isZh ? '当前主要销售市场' : 'Current Sales Markets'}
                     hint={isZh ? '最多选择 3 项，帮助 AI 判断您目前已有基础的市场方向' : 'Choose up to 3 to show where you already have traction'}
@@ -1200,7 +1209,9 @@ function App() {
                     </div>
                     {step1Submitted && currentMarketsError && <p className="mt-2 text-xs text-clay">{currentMarketsError}</p>}
                   </Field>
+                  </QuestionCard>
 
+                  <QuestionCard>
                   <Field
                     label={isZh ? '想重点开发的目标市场' : 'Target Markets to Develop'}
                     hint={isZh ? '最多选择 3 项，建议选择 1-3 个最想重点开发的市场' : 'Choose up to 3 priority markets to focus on'}
@@ -1223,6 +1234,7 @@ function App() {
                     </div>
                     {step1Submitted && targetMarketsError && <p className="mt-2 text-xs text-clay">{targetMarketsError}</p>}
                   </Field>
+                  </QuestionCard>
                   </SectionCard>
 
                   <SectionCard
@@ -1232,6 +1244,7 @@ function App() {
                         ? '这一部分会直接影响 AI 的客户定位和卖点提炼。'
                         : 'This section directly shapes AI customer targeting and positioning.'}
                   >
+                  <QuestionCard>
                   <Field
                     label={isZh ? '您更想开发哪类客户？' : 'Target Customer Types'}
                     hint={isZh ? '最多选择 3 项，AI 会根据客户类型推荐更适合的销售路径' : 'Choose up to 3 customer types to shape the route-to-market advice'}
@@ -1254,7 +1267,9 @@ function App() {
                     </div>
                     {step1Submitted && targetCustomersError && <p className="mt-2 text-xs text-clay">{targetCustomersError}</p>}
                   </Field>
+                  </QuestionCard>
 
+                  <QuestionCard>
                   <Field
                     label={isZh ? '您觉得自己的核心竞争优势是？' : 'Core Competitive Advantages'}
                     hint={isZh ? '最多选择 3 项，AI 会据此提炼您的出海定位和核心卖点' : 'Choose up to 3 strengths so AI can sharpen your positioning'}
@@ -1295,6 +1310,7 @@ function App() {
                     )}
                     {step1Submitted && coreAdvantagesError && <p className="mt-2 text-xs text-clay">{coreAdvantagesError}</p>}
                   </Field>
+                  </QuestionCard>
                   </SectionCard>
               </div>
 
@@ -2083,6 +2099,10 @@ function Field({ label, hint, children }) {
       {children}
     </label>
   )
+}
+
+function QuestionCard({ children }) {
+  return <div className="rounded-2xl border border-black/8 bg-white/72 p-4 sm:p-5">{children}</div>
 }
 
 function SectionCard({ title, description, children }) {
