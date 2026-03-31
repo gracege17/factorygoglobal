@@ -1053,7 +1053,15 @@ function App() {
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
+                  <SectionCard
+                    title={isZh ? 'A. 企业与产品基础' : 'A. Company & Product Basics'}
+                    description={
+                      isZh
+                        ? '先告诉我们你是谁、卖什么，以及大致供货能力。'
+                        : 'Start with who you are, what you sell, and your general supply scale.'
+                    }
+                  >
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field label={isZh ? '公司名称' : 'Company Name'}>
                       <input
@@ -1076,13 +1084,18 @@ function App() {
                         onBlur={handleProductCategoryBlur}
                         placeholder={isZh ? '例如：纸巾 / 包装材料 / 家居清洁用品' : 'e.g. Tissue paper / Packaging / Home cleaning'}
                       />
+                      <p className="mt-2 text-xs text-black/50">
+                        {isZh
+                          ? '可点击推荐品类，也可直接输入更具体的产品名称'
+                          : 'Use suggested categories or type your own specific product names'}
+                      </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {productCategorySuggestions.map((example) => (
                           <button
                             key={example}
                             type="button"
                             onClick={() => handleProductCategoryChange(example)}
-                            className="rounded-full border border-black/10 bg-sand px-3 py-1 text-xs text-black/65 transition hover:border-moss/40 hover:text-moss"
+                            className="rounded-full border border-black/10 bg-sand px-3 py-1.5 text-xs font-medium text-black/65 transition hover:border-moss/40 hover:text-moss"
                           >
                             {example}
                           </button>
@@ -1120,24 +1133,24 @@ function App() {
                       <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
                     </div>
                   </Field>
+                  </SectionCard>
 
+                  <SectionCard
+                    title={isZh ? 'B. 市场方向' : 'B. Market Direction'}
+                    description={
+                      isZh
+                        ? '这部分决定 AI 更适合给你推荐哪些国家和市场优先级。'
+                        : 'This section determines which markets AI should prioritize for you.'
+                    }
+                  >
                   <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
                     <div className="flex flex-wrap gap-2">
                       {certOptions.map((cert) => {
                         const selected = leadData.step1.certifications.includes(cert)
                         return (
-                          <button
-                            type="button"
-                            key={cert}
-                            onClick={() => toggleCertification(cert)}
-                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                              selected
-                                ? 'border-moss bg-moss text-white'
-                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                            }`}
-                          >
+                          <SelectionChip key={cert} selected={selected} onClick={() => toggleCertification(cert)}>
                             {cert}
-                          </button>
+                          </SelectionChip>
                         )
                       })}
                     </div>
@@ -1169,18 +1182,13 @@ function App() {
                       {currentMarketOptions.map((market) => {
                         const selected = leadData.step1.currentMarkets.includes(market)
                         return (
-                          <button
-                            type="button"
+                          <SelectionChip
                             key={market}
+                            selected={selected}
                             onClick={() => toggleExclusiveMultiSelect('currentMarkets', market, 3, '暂无出口')}
-                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                              selected
-                                ? 'border-moss bg-moss text-white'
-                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                            }`}
                           >
                             {market}
-                          </button>
+                          </SelectionChip>
                         )
                       })}
                     </div>
@@ -1195,24 +1203,27 @@ function App() {
                       {targetMarketOptions.map((market) => {
                         const selected = leadData.step1.targetMarkets.includes(market)
                         return (
-                          <button
-                            type="button"
+                          <SelectionChip
                             key={market}
+                            selected={selected}
                             onClick={() => toggleExclusiveMultiSelect('targetMarkets', market, 3, '__none__')}
-                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                              selected
-                                ? 'border-moss bg-moss text-white'
-                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                            }`}
                           >
                             {market}
-                          </button>
+                          </SelectionChip>
                         )
                       })}
                     </div>
                     {step1Submitted && targetMarketsError && <p className="mt-1 text-xs text-clay">{targetMarketsError}</p>}
                   </Field>
+                  </SectionCard>
 
+                  <SectionCard
+                    title={isZh ? 'C. 客户与优势判断' : 'C. Customers & Positioning'}
+                    description={
+                      isZh
+                        ? '这一部分会直接影响 AI 的客户定位和卖点提炼。'
+                        : 'This section directly shapes AI customer targeting and positioning.'}
+                  >
                   <Field
                     label={isZh ? '您更想开发哪类客户？' : 'Target Customer Types'}
                     hint={isZh ? '最多选择 3 项，AI 会根据客户类型推荐更适合的销售路径' : 'Choose up to 3 customer types to shape the route-to-market advice'}
@@ -1221,18 +1232,13 @@ function App() {
                       {targetCustomerOptions.map((customer) => {
                         const selected = leadData.step1.targetCustomers.includes(customer)
                         return (
-                          <button
-                            type="button"
+                          <SelectionChip
                             key={customer}
+                            selected={selected}
                             onClick={() => toggleExclusiveMultiSelect('targetCustomers', customer, 3, '暂不明确')}
-                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                              selected
-                                ? 'border-moss bg-moss text-white'
-                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                            }`}
                           >
                             {customer}
-                          </button>
+                          </SelectionChip>
                         )
                       })}
                     </div>
@@ -1247,18 +1253,13 @@ function App() {
                       {coreAdvantageOptions.map((advantage) => {
                         const selected = leadData.step1.coreAdvantages.includes(advantage)
                         return (
-                          <button
-                            type="button"
+                          <SelectionChip
                             key={advantage}
+                            selected={selected}
                             onClick={() => toggleExclusiveMultiSelect('coreAdvantages', advantage, 3, '__none__')}
-                            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                              selected
-                                ? 'border-moss bg-moss text-white'
-                                : 'border-black/15 bg-white text-black/75 hover:border-moss/40'
-                            }`}
                           >
                             {advantage}
-                          </button>
+                          </SelectionChip>
                         )
                       })}
                     </div>
@@ -1282,6 +1283,7 @@ function App() {
                     )}
                     {step1Submitted && coreAdvantagesError && <p className="mt-1 text-xs text-clay">{coreAdvantagesError}</p>}
                   </Field>
+                  </SectionCard>
               </div>
 
               <button
@@ -2068,6 +2070,34 @@ function Field({ label, hint, children }) {
       {hint && <p className="text-xs leading-relaxed text-black/50">{hint}</p>}
       {children}
     </label>
+  )
+}
+
+function SectionCard({ title, description, children }) {
+  return (
+    <div className="rounded-2xl border border-black/8 bg-sand/35 p-4 shadow-[0_1px_0_rgba(0,0,0,0.02)] sm:p-5">
+      <div className="mb-4 border-b border-black/6 pb-3">
+        <p className="text-sm font-semibold text-ink">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-black/55">{description}</p>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  )
+}
+
+function SelectionChip({ selected, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-3.5 py-2 text-sm leading-none transition ${
+        selected
+          ? 'border-moss bg-moss text-white shadow-[0_4px_14px_rgba(37,84,74,0.16)]'
+          : 'border-black/12 bg-white text-black/72 hover:border-moss/35 hover:bg-moss/5 hover:text-moss'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
 
