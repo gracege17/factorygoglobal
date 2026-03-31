@@ -143,7 +143,7 @@ function App() {
     setAnalyzing(true)
 
     try {
-      const aiPositioning = await fetchAIStrategy(leadData.step1)
+      const aiPositioning = await fetchAIStrategy(leadData.step1, lang)
       setLeadData((prev) => ({
         ...prev,
         step2: {
@@ -152,7 +152,7 @@ function App() {
       }))
       setStep(2)
     } catch {
-      const fallback = createMockAI(leadData.step1)
+      const fallback = createMockAI(leadData.step1, lang)
       setLeadData((prev) => ({
         ...prev,
         step2: {
