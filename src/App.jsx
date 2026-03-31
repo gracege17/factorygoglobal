@@ -1168,7 +1168,7 @@ function App() {
                       }}
                     >
                       <p className="text-xs uppercase tracking-[0.22em] text-white/70">{usWebsiteCopy.heroEyebrow}</p>
-                      <h4 className="mt-2 text-2xl leading-tight">
+                      <h4 className="us-web-subheading mt-2">
                         {usWebsiteCopy.heroTitle}
                       </h4>
                     </div>
@@ -1299,25 +1299,25 @@ function App() {
               }}
             >
               <p className="text-xs uppercase tracking-[0.24em] text-white/70">{usWebsiteCopy.heroEyebrow}</p>
-              <h2 className="mt-2 text-4xl">{usWebsiteCopy.heroTitle}</h2>
-              <p className="mt-3 max-w-2xl text-white/80">
+              <h2 className="us-web-title mt-2">{usWebsiteCopy.heroTitle}</h2>
+              <p className="us-web-text mt-3 max-w-2xl text-white/85">
                 {usWebsiteCopy.heroSubtitle}
               </p>
             </div>
 
             <section className="mt-6 rounded-2xl border border-black/10 bg-sand/40 p-5">
               <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.aboutTitle}</p>
-              <h3 className="mt-2 text-2xl">{leadData.step1.companyName || 'Your Company'}</h3>
-              <p className="mt-2 text-sm text-black/70">
+              <h3 className="us-web-heading mt-2">{leadData.step1.companyName || 'Your Company'}</h3>
+              <p className="us-web-text mt-2 text-black/75">
                 {usWebsiteCopy.aboutText}
               </p>
             </section>
 
             <section className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.whyTitle}</p>
+              <p className="us-web-subheading text-black/85">{usWebsiteCopy.whyTitle}</p>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
                 {usWebsiteCopy.whyItems.map((item) => (
-                  <div key={item} className="rounded-xl border border-black/10 bg-white p-4 text-sm">
+                  <div key={item} className="us-web-text rounded-xl border border-black/10 bg-white p-4 text-black/80">
                     {item}
                   </div>
                 ))}
@@ -1325,11 +1325,11 @@ function App() {
             </section>
 
             <section className="mt-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.productTitle}</p>
+              <p className="us-web-subheading text-black/85">{usWebsiteCopy.productTitle}</p>
               <div className="mt-3 space-y-4">
                 {productEntries.map((entry) => (
                   <div key={`${entry.index}-${entry.name}`} className="rounded-2xl border border-black/10 bg-white p-4">
-                    <h4 className="text-lg font-semibold">{entry.name}</h4>
+                    <h4 className="us-web-subheading">{entry.name}</h4>
                     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
                         <img
@@ -1346,7 +1346,7 @@ function App() {
             </section>
 
             <section className="mt-6 rounded-2xl border border-black/10 bg-white p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.trustTitle}</p>
+              <p className="us-web-subheading text-black/85">{usWebsiteCopy.trustTitle}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Tag>{leadData.step1.currentCapacity || 'Capacity pending'}</Tag>
                 {leadData.step1.certifications.length > 0
@@ -1356,9 +1356,9 @@ function App() {
             </section>
 
             <section className="mt-6 rounded-2xl border border-moss/30 bg-moss/8 p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-moss/80">{usWebsiteCopy.contactTitle}</p>
-              <h3 className="mt-2 text-2xl">Contact Factory Team</h3>
-              <p className="mt-2 text-sm text-black/70">
+              <p className="us-web-subheading text-moss/90">{usWebsiteCopy.contactTitle}</p>
+              <h3 className="us-web-heading mt-2">Contact Factory Team</h3>
+              <p className="us-web-text mt-2 text-black/75">
                 {usWebsiteCopy.contactText}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
