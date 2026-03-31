@@ -13,7 +13,6 @@ import {
   Trash2,
   TrendingUp,
   Upload,
-  Video,
 } from 'lucide-react'
 import { createMockAI, fetchAIStrategy } from './lib/ai'
 
@@ -73,8 +72,8 @@ const PRODUCT_LIST_MIN = 3
 const PRODUCT_LIST_MAX = 5
 const PRODUCT_ITEM_MAX_LENGTH = 40
 const productItemAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s/&,+\-.'’()（）]+$/
-const MEDIA_MIN = 1
-const MEDIA_MAX = 3
+const PRODUCT_PHOTO_MIN = 2
+const PRODUCT_PHOTO_MAX = 3
 
 const getCostData = (market = '') => {
   const key = market.trim().toLowerCase()
@@ -195,29 +194,36 @@ const validateTargetMarket = (value, isZh) => {
 }
 
 const getFilledProductItems = (items = []) => items.map((item) => item.trim()).filter(Boolean)
+const getFilledProductEntries = (items = [], photos = []) =>
+  items
+    .map((name, index) => ({
+      index,
+      name: name.trim(),
+      photos: photos[index] || [],
+    }))
+    .filter((item) => item.name)
 
 const validateProductItems = (items, isZh) => {
   const filledItems = getFilledProductItems(items)
-  const uniqueItems = [...new Set(filledItems)]
-  if (uniqueItems.length < PRODUCT_LIST_MIN) {
+  if (filledItems.length < PRODUCT_LIST_MIN) {
     return {
       error: isZh
         ? `请至少填写 ${PRODUCT_LIST_MIN} 个产品。`
         : `Please provide at least ${PRODUCT_LIST_MIN} products.`,
-      items: uniqueItems,
+      items: filledItems,
     }
   }
 
-  if (uniqueItems.length > PRODUCT_LIST_MAX) {
+  if (filledItems.length > PRODUCT_LIST_MAX) {
     return {
       error: isZh
         ? `最多填写 ${PRODUCT_LIST_MAX} 个产品。`
         : `Please provide no more than ${PRODUCT_LIST_MAX} products.`,
-      items: uniqueItems,
+      items: filledItems,
     }
   }
 
-  const invalidItem = uniqueItems.find(
+  const invalidItem = filledItems.find(
     (item) => item.length < 2 || item.length > PRODUCT_ITEM_MAX_LENGTH || !productItemAllowedPattern.test(item),
   )
   if (invalidItem) {
@@ -225,11 +231,27 @@ const validateProductItems = (items, isZh) => {
       error: isZh
         ? `每个产品需 2-${PRODUCT_ITEM_MAX_LENGTH} 字，且仅支持中英文、数字和常见符号。`
         : `Each product must be 2-${PRODUCT_ITEM_MAX_LENGTH} chars and use letters/numbers/common symbols.`,
-      items: uniqueItems,
+      items: filledItems,
     }
   }
 
-  return { error: '', items: uniqueItems }
+  return { error: '', items: filledItems }
+}
+
+const validateProductPhotos = (productItems, productPhotos, isZh) => {
+  const entries = getFilledProductEntries(productItems, productPhotos)
+  const invalidEntry = entries.find(
+    (entry) => entry.photos.length < PRODUCT_PHOTO_MIN || entry.photos.length > PRODUCT_PHOTO_MAX,
+  )
+
+  if (invalidEntry) {
+    const productName = invalidEntry.name || (isZh ? `产品 ${invalidEntry.index + 1}` : `Product ${invalidEntry.index + 1}`)
+    return isZh
+      ? `「${productName}」需上传 ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张照片。`
+      : `"${productName}" requires ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} photos.`
+  }
+
+  return ''
 }
 
 function App() {
@@ -249,7 +271,7 @@ function App() {
   const [targetMarketTouched, setTargetMarketTouched] = useState(false)
   const [productListError, setProductListError] = useState('')
   const [productListTouched, setProductListTouched] = useState(false)
-  const [uploadError, setUploadError] = useState('')
+  const [productPhotoError, setProductPhotoError] = useState('')
   const [lang, setLang] = useState('en')
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
@@ -267,8 +289,8 @@ function App() {
       targetMarket: '',
     },
     step5: {
-      uploadedMedia: [],
       productItems: ['', '', ''],
+      productPhotos: [[], [], []],
     },
   })
 
@@ -382,6 +404,7 @@ function App() {
         step5: {
           ...prev.step5,
           productItems: [...prev.step5.productItems, ''],
+          productPhotos: [...prev.step5.productPhotos, []],
         },
       }
     })
@@ -393,14 +416,50 @@ function App() {
         return prev
       }
       const nextItems = prev.step5.productItems.filter((_, itemIndex) => itemIndex !== index)
+      const nextPhotos = prev.step5.productPhotos.filter((_, itemIndex) => itemIndex !== index)
       return {
         ...prev,
         step5: {
           ...prev.step5,
           productItems: nextItems,
+          productPhotos: nextPhotos,
         },
       }
     })
+  }
+
+  const handleProductPhotoUpload = (productIndex, event) => {
+    const pickedFiles = Array.from(event.target.files || [])
+    const imageFiles = pickedFiles.filter((file) => file.type.startsWith('image/'))
+    const files = imageFiles.slice(0, PRODUCT_PHOTO_MAX)
+
+    const previews = files.map((file) => ({
+      name: file.name,
+      file,
+      url: URL.createObjectURL(file),
+    }))
+
+    setLeadData((prev) => ({
+      ...prev,
+      step5: {
+        ...prev.step5,
+        productPhotos: prev.step5.productPhotos.map((photos, index) => (index === productIndex ? previews : photos)),
+      },
+    }))
+
+    if (pickedFiles.length > 0 && imageFiles.length === 0) {
+      setProductPhotoError(isZh ? '产品照片仅支持图片文件。' : 'Product photos only support image files.')
+      return
+    }
+    if (imageFiles.length > PRODUCT_PHOTO_MAX) {
+      setProductPhotoError(
+        isZh
+          ? `单个产品最多上传 ${PRODUCT_PHOTO_MAX} 张照片，已保留前 ${PRODUCT_PHOTO_MAX} 张。`
+          : `Each product supports up to ${PRODUCT_PHOTO_MAX} photos. Kept the first ${PRODUCT_PHOTO_MAX}.`,
+      )
+      return
+    }
+    setProductPhotoError('')
   }
 
   useEffect(() => {
@@ -523,51 +582,6 @@ function App() {
     setStep(4)
   }
 
-  const handleUpload = (event) => {
-    const pickedFiles = Array.from(event.target.files || [])
-    const mediaFiles = pickedFiles.filter((file) => file.type.startsWith('image/') || file.type.startsWith('video/'))
-    const files = mediaFiles.slice(0, MEDIA_MAX)
-    const hasTooMany = mediaFiles.length > MEDIA_MAX
-    const hasNoValidMedia = pickedFiles.length > 0 && mediaFiles.length === 0
-
-    const previews = files.map((file) => ({
-      name: file.name,
-      file,
-      url: URL.createObjectURL(file),
-      kind: file.type.startsWith('video/') ? 'video' : 'image',
-    }))
-
-    setLeadData((prev) => ({
-      ...prev,
-      step5: {
-        ...prev.step5,
-        uploadedMedia: previews,
-      },
-    }))
-
-    if (hasNoValidMedia) {
-      setUploadError(
-        isZh ? '仅支持上传图片或视频文件。' : 'Only image or video files are supported.',
-      )
-      return
-    }
-    if (hasTooMany) {
-      setUploadError(
-        isZh
-          ? `最多上传 ${MEDIA_MAX} 个素材，已保留前 ${MEDIA_MAX} 个。`
-          : `Up to ${MEDIA_MAX} media files are allowed. Kept the first ${MEDIA_MAX}.`,
-      )
-      return
-    }
-    if (files.length === 0) {
-      setUploadError(
-        isZh ? `请至少上传 ${MEDIA_MIN} 个工厂照片/视频。` : `Please upload at least ${MEDIA_MIN} factory photo/video.`,
-      )
-      return
-    }
-    setUploadError('')
-  }
-
   const downloadPdf = async () => {
     if (!pdfRef.current || downloadingPdf) {
       return
@@ -579,12 +593,9 @@ function App() {
       setProductListError(productValidation.error)
       return
     }
-    if (leadData.step5.uploadedMedia.length < MEDIA_MIN || leadData.step5.uploadedMedia.length > MEDIA_MAX) {
-      setUploadError(
-        isZh
-          ? `下载 PDF 前请先上传 ${MEDIA_MIN}-${MEDIA_MAX} 个工厂照片/视频素材。`
-          : `Please upload ${MEDIA_MIN}-${MEDIA_MAX} factory photo/video files before downloading PDF.`,
-      )
+    const productPhotoValidation = validateProductPhotos(leadData.step5.productItems, leadData.step5.productPhotos, isZh)
+    if (productPhotoValidation) {
+      setProductPhotoError(productPhotoValidation)
       return
     }
 
@@ -624,7 +635,7 @@ function App() {
   }
 
   const ai = leadData.step2.aiPositioning
-  const primaryImage = leadData.step5.uploadedMedia.find((item) => item.kind === 'image')?.url
+  const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
   const parsedProducts = getFilledProductItems(leadData.step5.productItems)
 
   return (
@@ -969,24 +980,54 @@ function App() {
                 </label>
                 <div className="space-y-2">
                   {leadData.step5.productItems.map((item, index) => (
-                    <div key={`product-${index}`} className="flex items-center gap-2">
-                      <input
-                        value={item}
-                        onChange={(e) => handleProductItemChange(index, e.target.value)}
-                        onBlur={handleProductItemBlur}
-                        className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
-                        placeholder={isZh ? `产品 ${index + 1}，例如：竹纤维面巾纸` : `Product ${index + 1}, e.g. Bamboo facial tissue`}
-                      />
-                      {leadData.step5.productItems.length > PRODUCT_LIST_MIN && (
-                        <button
-                          type="button"
-                          onClick={() => removeProductItem(index)}
-                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/15 text-black/65"
-                          aria-label={isZh ? '删除产品' : 'Remove product'}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
+                    <div key={`product-${index}`} className="rounded-xl border border-black/10 bg-sand/55 p-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={item}
+                          onChange={(e) => handleProductItemChange(index, e.target.value)}
+                          onBlur={handleProductItemBlur}
+                          className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                          placeholder={isZh ? `产品 ${index + 1}，例如：竹纤维面巾纸` : `Product ${index + 1}, e.g. Bamboo facial tissue`}
+                        />
+                        {leadData.step5.productItems.length > PRODUCT_LIST_MIN && (
+                          <button
+                            type="button"
+                            onClick={() => removeProductItem(index)}
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/15 text-black/65"
+                            aria-label={isZh ? '删除产品' : 'Remove product'}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-black/15 bg-white px-3 py-2 text-xs font-semibold text-black/75">
+                          <Upload className="h-3.5 w-3.5" />
+                          {isZh ? `上传该产品照片（${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张）` : `Upload photos for this product (${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX})`}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => handleProductPhotoUpload(index, e)}
+                          />
+                        </label>
+                        <span className="ml-2 text-xs text-black/50">
+                          {(leadData.step5.productPhotos[index] || []).length}/{PRODUCT_PHOTO_MAX}
+                        </span>
+                        {(leadData.step5.productPhotos[index] || []).length > 0 && (
+                          <div className="mt-2 grid grid-cols-3 gap-2">
+                            {leadData.step5.productPhotos[index].map((photo) => (
+                              <img
+                                key={`${photo.name}-${photo.url}`}
+                                src={photo.url}
+                                alt={photo.name}
+                                className="h-16 w-full rounded-md border border-black/10 object-cover"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1000,60 +1041,16 @@ function App() {
                   {isZh ? '新增一条产品' : 'Add Product Item'}
                 </button>
                 <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
-                  <span className={productListError ? 'text-clay' : 'text-black/50'}>
+                  <span className={productListError || productPhotoError ? 'text-clay' : 'text-black/50'}>
                     {productListError ||
+                      productPhotoError ||
                       (isZh
-                        ? `请填写 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个主推产品，每条一项`
-                        : `Provide ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} key products, one item per row`)}
+                        ? `请填写 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个主推产品，每个产品上传 ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张照片`
+                        : `Provide ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} key products and upload ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} photos for each`)}
                   </span>
                   <span className="text-black/45">
                     {parsedProducts.length}/{PRODUCT_LIST_MAX}
                   </span>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-black/10 bg-sand p-4">
-                <label className="mb-2 block text-sm font-medium">
-                  {isZh
-                    ? `请上传 ${MEDIA_MIN}-${MEDIA_MAX} 个工厂照片/视频素材`
-                    : `Upload ${MEDIA_MIN}-${MEDIA_MAX} factory photo/video assets`}
-                </label>
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold">
-                  <Upload className="h-4 w-4" />
-                  {isZh ? '选择照片/视频' : 'Select Photo/Video'}
-                  <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleUpload} />
-                </label>
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
-                  <span className={uploadError ? 'text-clay' : 'text-black/50'}>
-                    {uploadError ||
-                      (isZh
-                        ? `至少 ${MEDIA_MIN} 个、最多 ${MEDIA_MAX} 个；支持图片和短视频`
-                        : `At least ${MEDIA_MIN} and up to ${MEDIA_MAX}; supports image and short video`)}
-                  </span>
-                  <span className="text-black/45">{leadData.step5.uploadedMedia.length}/{MEDIA_MAX}</span>
-                </div>
-                <div className="mt-3 grid gap-3 md:grid-cols-3">
-                  {leadData.step5.uploadedMedia.length === 0 && (
-                    <p className="rounded-xl border border-dashed border-black/15 bg-white p-3 text-sm text-black/55 md:col-span-3">
-                      {isZh ? '尚未上传照片/视频，预览将使用默认风格。' : 'No photo/video uploaded yet. Preview will use default style.'}
-                    </p>
-                  )}
-                  {leadData.step5.uploadedMedia.map((media) => (
-                    <div key={media.name} className="overflow-hidden rounded-xl border border-black/10 bg-white">
-                      {media.kind === 'video' ? (
-                        <div className="relative">
-                          <video src={media.url} className="h-32 w-full object-cover" controls />
-                          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-1 text-[10px] text-white">
-                            <Video className="h-3 w-3" />
-                            {isZh ? '视频' : 'Video'}
-                          </span>
-                        </div>
-                      ) : (
-                        <img src={media.url} alt={media.name} className="h-32 w-full object-cover" />
-                      )}
-                      <p className="truncate px-2 py-1 text-xs text-black/55">{media.name}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
 
