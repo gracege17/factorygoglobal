@@ -272,6 +272,9 @@ function App() {
   const [productListError, setProductListError] = useState('')
   const [productListTouched, setProductListTouched] = useState(false)
   const [productPhotoError, setProductPhotoError] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [websiteGenerated, setWebsiteGenerated] = useState(false)
+  const [onePagerGenerated, setOnePagerGenerated] = useState(false)
   const [lang, setLang] = useState('en')
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
@@ -587,6 +590,11 @@ function App() {
       return
     }
 
+    if (!onePagerGenerated) {
+      setActionError(isZh ? '请先点击“生成 One-pager”再下载 PDF。' : 'Please click "Generate One-pager" before downloading PDF.')
+      return
+    }
+
     const productValidation = validateProductItems(leadData.step5.productItems, isZh)
     if (productValidation.error) {
       setProductListTouched(true)
@@ -599,6 +607,7 @@ function App() {
       return
     }
 
+    setActionError('')
     setPdfError('')
     setDownloadingPdf(true)
 
@@ -637,6 +646,43 @@ function App() {
   const ai = leadData.step2.aiPositioning
   const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
   const parsedProducts = getFilledProductItems(leadData.step5.productItems)
+
+  const validateStep5Inputs = () => {
+    const productValidation = validateProductItems(leadData.step5.productItems, isZh)
+    if (productValidation.error) {
+      setProductListTouched(true)
+      setProductListError(productValidation.error)
+      return false
+    }
+
+    const productPhotoValidation = validateProductPhotos(leadData.step5.productItems, leadData.step5.productPhotos, isZh)
+    if (productPhotoValidation) {
+      setProductPhotoError(productPhotoValidation)
+      return false
+    }
+
+    setProductListError('')
+    setProductPhotoError('')
+    return true
+  }
+
+  const generateWebsitePreview = () => {
+    if (!validateStep5Inputs()) {
+      setWebsiteGenerated(false)
+      return
+    }
+    setActionError('')
+    setWebsiteGenerated(true)
+  }
+
+  const generateOnePagerPreview = () => {
+    if (!validateStep5Inputs()) {
+      setOnePagerGenerated(false)
+      return
+    }
+    setActionError('')
+    setOnePagerGenerated(true)
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-3 pb-14 pt-4 text-ink sm:px-4 md:px-8 md:pt-8">
@@ -1054,7 +1100,31 @@ function App() {
                 </div>
               </div>
 
-              <div className="grid gap-5 xl:grid-cols-2">
+              <div className="flex flex-col items-start gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={generateWebsitePreview}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
+                  >
+                    {isZh ? '生成网站预览' : 'Generate Website Preview'}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generateOnePagerPreview}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-ink px-4 py-3 text-sm font-semibold text-ink"
+                  >
+                    {isZh ? '生成 One-pager' : 'Generate One-pager'}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+                {actionError && <p className="text-sm text-clay">{actionError}</p>}
+              </div>
+
+              {websiteGenerated ? (
+                <>
+                <div className="grid gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-black/10 bg-white p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-xl">{isZh ? 'One-page 营销页预览' : 'One-page Marketing Site Preview'}</h3>
@@ -1106,9 +1176,46 @@ function App() {
                         </div>
                       </div>
                     </div>
-                  </div>
                 </div>
+              </div>
+              </div>
+              <div className="rounded-2xl border border-moss/30 bg-moss/8 p-5">
+                <p className="text-xs uppercase tracking-[0.2em] text-moss/80">{isZh ? '终极 CTA' : 'Final CTA'}</p>
+                <h3 className="mt-2 text-2xl">
+                  {isZh ? '需要高级动效独立站与 Amazon 开店支持？' : 'Need a premium export website + Amazon launch support?'}
+                </h3>
+                <p className="mt-2 text-sm text-black/70">
+                  {isZh
+                    ? '获取高转化独立站、海外买家触达流程与持续增长支持。'
+                    : 'Get a high-conversion site with advanced motion, buyer outreach workflow, and overseas demand generation support.'}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a
+                    href="https://wa.me/0000000000?text=Hi%20FactoryGoGlobal%2C%20I%20want%20to%20discuss%20a%20premium%20export%20site."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full rounded-xl bg-moss px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
+                  >
+                    {isZh ? 'WhatsApp 联系' : 'Connect on WhatsApp'}
+                  </a>
+                  <a
+                    href="mailto:hello@factorygoglobal.com?subject=Premium%20Export%20Service%20Inquiry"
+                    className="w-full rounded-xl border border-moss px-4 py-3 text-center text-sm font-semibold text-moss sm:w-auto"
+                  >
+                    {isZh ? '邮件联系' : 'Contact via Email'}
+                  </a>
+                </div>
+              </div>
+              </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-black/20 bg-white p-5 text-sm text-black/60">
+                  {isZh
+                    ? '点击“生成网站预览”后，这里会展示营销页预览与全屏预览。'
+                    : 'Click "Generate Website Preview" to show website preview and fullscreen view.'}
+                </div>
+              )}
 
+              {onePagerGenerated ? (
                 <div className="rounded-2xl border border-black/10 bg-white p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-xl">{isZh ? 'One-pager PDF 预览' : 'One-pager PDF Preview'}</h3>
@@ -1148,40 +1255,18 @@ function App() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-moss/30 bg-moss/8 p-5">
-                <p className="text-xs uppercase tracking-[0.2em] text-moss/80">{isZh ? '终极 CTA' : 'Final CTA'}</p>
-                <h3 className="mt-2 text-2xl">
-                  {isZh ? '需要高级动效独立站与 Amazon 开店支持？' : 'Need a premium export website + Amazon launch support?'}
-                </h3>
-                <p className="mt-2 text-sm text-black/70">
+              ) : (
+                <div className="rounded-2xl border border-dashed border-black/20 bg-white p-5 text-sm text-black/60">
                   {isZh
-                    ? '获取高转化独立站、海外买家触达流程与持续增长支持。'
-                    : 'Get a high-conversion site with advanced motion, buyer outreach workflow, and overseas demand generation support.'}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <a
-                    href="https://wa.me/0000000000?text=Hi%20FactoryGoGlobal%2C%20I%20want%20to%20discuss%20a%20premium%20export%20site."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full rounded-xl bg-moss px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
-                  >
-                    {isZh ? 'WhatsApp 联系' : 'Connect on WhatsApp'}
-                  </a>
-                  <a
-                    href="mailto:hello@factorygoglobal.com?subject=Premium%20Export%20Service%20Inquiry"
-                    className="w-full rounded-xl border border-moss px-4 py-3 text-center text-sm font-semibold text-moss sm:w-auto"
-                  >
-                    {isZh ? '邮件联系' : 'Contact via Email'}
-                  </a>
+                    ? '点击“生成 One-pager”后，这里会展示 PDF 预览与下载。'
+                    : 'Click "Generate One-pager" to show PDF preview and download.'}
                 </div>
-              </div>
+              )}
             </div>
           )}
       </section>
 
-      {showFullscreen && (
+      {showFullscreen && websiteGenerated && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 px-4" onClick={() => setShowFullscreen(false)}>
           <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
               <div
