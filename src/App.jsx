@@ -646,6 +646,7 @@ function App() {
   const ai = leadData.step2.aiPositioning
   const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
   const parsedProducts = getFilledProductItems(leadData.step5.productItems)
+  const productEntries = getFilledProductEntries(leadData.step5.productItems, leadData.step5.productPhotos)
 
   const validateStep5Inputs = () => {
     const productValidation = validateProductItems(leadData.step5.productItems, isZh)
@@ -1269,27 +1270,94 @@ function App() {
       {showFullscreen && websiteGenerated && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 px-4" onClick={() => setShowFullscreen(false)}>
           <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
-              <div
-                className="relative overflow-hidden rounded-2xl p-10 text-white"
-                style={{
-                  background: primaryImage
-                    ? `linear-gradient(110deg, rgba(22,22,22,0.78), rgba(22,22,22,0.45)), url(${primaryImage}) center/cover`
-                    : 'linear-gradient(120deg, #25544a, #0f2f29)',
-                }}
-              >
-                <p className="text-xs uppercase tracking-[0.24em] text-white/70">{isZh ? 'One-page 全屏预览' : 'One-page Full Preview'}</p>
-                <h2 className="mt-2 text-4xl">{ai?.slogan || (isZh ? '面向全球市场的现代化制造方案' : 'Export-ready manufacturing with modern positioning')}</h2>
-                <p className="mt-3 max-w-2xl text-white/80">
-                  {ai?.trust || (isZh ? '上传图片并完成分析后，可获得更完整的预览内容。' : 'Upload images and run strategy to enrich this preview.')}
-                </p>
-              </div>
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div
+              className="relative overflow-hidden rounded-2xl p-10 text-white"
+              style={{
+                background: primaryImage
+                  ? `linear-gradient(110deg, rgba(22,22,22,0.78), rgba(22,22,22,0.45)), url(${primaryImage}) center/cover`
+                  : 'linear-gradient(120deg, #25544a, #0f2f29)',
+              }}
+            >
+              <p className="text-xs uppercase tracking-[0.24em] text-white/70">{isZh ? 'One-page 全屏预览' : 'One-page Full Preview'}</p>
+              <h2 className="mt-2 text-4xl">{ai?.slogan || (isZh ? '面向全球市场的现代化制造方案' : 'Export-ready manufacturing with modern positioning')}</h2>
+              <p className="mt-3 max-w-2xl text-white/80">
+                {ai?.trust || (isZh ? '上传图片并完成分析后，可获得更完整的预览内容。' : 'Upload images and run strategy to enrich this preview.')}
+              </p>
+            </div>
+
+            <section className="mt-6 rounded-2xl border border-black/10 bg-sand/40 p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'About Us' : 'About Us'}</p>
+              <h3 className="mt-2 text-2xl">{leadData.step1.companyName || (isZh ? '你的公司名称' : 'Your Company')}</h3>
+              <p className="mt-2 text-sm text-black/70">
+                {ai?.differentiation || (isZh ? '我们专注于稳定交付与长期合作，支持海外市场合规落地。' : 'We focus on stable delivery and long-term partnerships for global market entry.')}
+              </p>
+            </section>
+
+            <section className="mt-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Why Us' : 'Why Us'}</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-3">
                 {(ai?.valueProps || []).map((item) => (
-                  <div key={item} className="rounded-xl border border-black/10 p-4 text-sm">
+                  <div key={item} className="rounded-xl border border-black/10 bg-white p-4 text-sm">
                     {item}
                   </div>
                 ))}
               </div>
+            </section>
+
+            <section className="mt-6">
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Product Info' : 'Product Info'}</p>
+              <div className="mt-3 space-y-4">
+                {productEntries.map((entry) => (
+                  <div key={`${entry.index}-${entry.name}`} className="rounded-2xl border border-black/10 bg-white p-4">
+                    <h4 className="text-lg font-semibold">{entry.name}</h4>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
+                        <img
+                          key={`${entry.name}-${photo.url}`}
+                          src={photo.url}
+                          alt={`${entry.name}-${photo.name}`}
+                          className="h-28 w-full rounded-lg border border-black/10 object-cover"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-black/10 bg-white p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Trust & Certifications' : 'Trust & Certifications'}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Tag>{leadData.step1.currentCapacity || (isZh ? '待填写产能数据' : 'Capacity pending')}</Tag>
+                {leadData.step1.certifications.length > 0
+                  ? leadData.step1.certifications.map((item) => <Tag key={item}>{item}</Tag>)
+                  : <Tag>{isZh ? '认证信息待补充' : 'Certifications pending'}</Tag>}
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-moss/30 bg-moss/8 p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-moss/80">{isZh ? 'Contact Us' : 'Contact Us'}</p>
+              <h3 className="mt-2 text-2xl">{isZh ? '联系工厂团队' : 'Contact Factory Team'}</h3>
+              <p className="mt-2 text-sm text-black/70">
+                {isZh ? '支持样品、报价、交期与定制需求沟通。' : 'Available for sample requests, quotes, lead-time, and customization.'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <a
+                  href="mailto:hello@factorygoglobal.com?subject=FactoryGoGlobal%20Inquiry"
+                  className="w-full rounded-xl bg-ink px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
+                >
+                  {isZh ? '邮件联系' : 'Email Us'}
+                </a>
+                <a
+                  href="https://wa.me/0000000000?text=Hi%20FactoryGoGlobal%2C%20I%20want%20to%20discuss%20products."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full rounded-xl border border-ink px-4 py-3 text-center text-sm font-semibold text-ink sm:w-auto"
+                >
+                  {isZh ? 'WhatsApp 联系' : 'WhatsApp'}
+                </a>
+              </div>
+            </section>
           </div>
         </div>
       )}
