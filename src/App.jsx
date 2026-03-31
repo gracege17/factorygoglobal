@@ -290,36 +290,36 @@ function App() {
       <section className="rounded-3xl border border-black/5 bg-white/85 p-4 shadow-soft md:p-8">
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">Step 1. Basic Information</h2>
+              <h2 className="text-2xl">{isZh ? 'Step 1. 基本信息采集' : 'Step 1. Basic Information'}</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Company Name">
+                <Field label={isZh ? '公司名称' : 'Company Name'}>
                   <input
                     className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.companyName}
                     onChange={(e) => updateStep1('companyName', e.target.value)}
-                    placeholder="e.g. Zhejiang Eco Paper Co., Ltd"
+                    placeholder={isZh ? '例如：浙江某某实业有限公司' : 'e.g. Zhejiang Eco Paper Co., Ltd'}
                   />
                 </Field>
-                <Field label="Main Product Category">
+                <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                   <input
                     className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                     value={leadData.step1.productCategory}
                     onChange={(e) => updateStep1('productCategory', e.target.value)}
-                    placeholder="e.g. Tissue paper / Packaging"
+                    placeholder={isZh ? '例如：纸巾 / 包装材料' : 'e.g. Tissue paper / Packaging'}
                   />
                 </Field>
               </div>
 
-              <Field label="Current Capacity / Scale">
+              <Field label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}>
                 <input
                   className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
                   value={leadData.step1.currentCapacity}
                   onChange={(e) => updateStep1('currentCapacity', e.target.value)}
-                  placeholder="e.g. 8,000 tons/month, 5 production lines"
+                  placeholder={isZh ? '例如：月产 8000 吨，5 条产线' : 'e.g. 8,000 tons/month, 5 production lines'}
                 />
               </Field>
 
-              <Field label="Existing Certifications">
+              <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
                 <div className="flex flex-wrap gap-2">
                   {certOptions.map((cert) => {
                     const selected = leadData.step1.certifications.includes(cert)
@@ -375,20 +375,20 @@ function App() {
                           {market.country}
                         </div>
                         <p className="mt-2 text-2xl font-bold text-moss">{market.fitScore}%</p>
-                        <p className="text-xs text-black/60">Market fit score</p>
+                        <p className="text-xs text-black/60">{isZh ? '市场匹配度' : 'Market fit score'}</p>
                       </div>
                     ))}
                   </div>
 
                   <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
-                    <p className="text-xs uppercase tracking-[0.2em] text-moss/70">Core Differentiation</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-moss/70">{isZh ? '核心定位' : 'Core Differentiation'}</p>
                     <p className="mt-2 text-base leading-relaxed">{ai.differentiation}</p>
                   </div>
 
                   <div className="rounded-2xl border border-black/10 bg-white p-5">
                     <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
                       <ShieldCheck className="h-4 w-4 text-clay" />
-                      Required Certifications
+                      {isZh ? '准入所需认证' : 'Required Certifications'}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {ai.requiredCertifications.map((item) => (
@@ -432,7 +432,9 @@ function App() {
                   >
                     <p className="font-semibold">{isZh ? '选项 A：接受 AI 推荐' : 'Option A: Accept AI Recommendation'}</p>
                     <p className="mt-1 text-sm text-black/60">
-                      Use {ai.topMarkets[0].country} as primary launch market and continue.
+                      {isZh
+                        ? `以 ${ai.topMarkets[0].country} 作为首发市场并继续。`
+                        : `Use ${ai.topMarkets[0].country} as primary launch market and continue.`}
                     </p>
                   </div>
 
@@ -451,7 +453,7 @@ function App() {
                           step3: { targetMarket: e.target.value },
                         }))
                       }
-                      placeholder="e.g. Canada"
+                      placeholder={isZh ? '例如：加拿大' : 'e.g. Canada'}
                       className="mt-3 w-full rounded-xl border border-black/15 px-3 py-2 text-sm outline-none ring-moss/30 focus:ring"
                     />
                   </div>
@@ -463,7 +465,9 @@ function App() {
                     {isZh ? '需要针对目标国家做深度准入调研吗？' : 'Need deep market compliance research?'}
                   </h3>
                   <p className="mt-2 text-sm text-black/65">
-                    Get country-specific entry requirements and competitor mapping from our expert team.
+                    {isZh
+                      ? '获取针对特定国家的准入要求与竞品分析。'
+                      : 'Get country-specific entry requirements and competitor mapping from our expert team.'}
                   </p>
                   <a
                     href="mailto:hello@factorygoglobal.com?subject=Need%20Deep%20Market%20Research"
@@ -498,19 +502,23 @@ function App() {
             <div className="space-y-5">
               <h2 className="text-2xl">{isZh ? 'Step 4. 出海成本概算' : 'Step 4. Cost Framework'}</h2>
               <p className="text-sm text-black/60">
-                Estimated for <span className="font-semibold">{currentMarket || 'your selected market'}</span>. MVP uses rough ranges.
+                {isZh
+                  ? <>基于 <span className="font-semibold">{currentMarket || '你选择的市场'}</span> 的粗略估算（MVP 阶段）。</>
+                  : <>Estimated for <span className="font-semibold">{currentMarket || 'your selected market'}</span>. MVP uses rough ranges.</>}
               </p>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <InfoCard label="Estimated Tariff Range" value={costData.tariff} />
-                <InfoCard label="Sea/Air Logistics Level" value={costData.logistics} />
-                <InfoCard label="Mainstream Platform Entry Cost" value={costData.platform} />
-                <InfoCard label="Certification Processing Cost" value={costData.certification} />
+                <InfoCard label={isZh ? '关税预估范围' : 'Estimated Tariff Range'} value={costData.tariff} />
+                <InfoCard label={isZh ? '海空运费级别' : 'Sea/Air Logistics Level'} value={costData.logistics} />
+                <InfoCard label={isZh ? '平台入驻费用区间' : 'Mainstream Platform Entry Cost'} value={costData.platform} />
+                <InfoCard label={isZh ? '认证办理费用区间' : 'Certification Processing Cost'} value={costData.certification} />
               </div>
 
               <div className="rounded-2xl border border-clay/25 bg-clay/5 p-5">
                 <p className="text-sm text-black/75">
-                  CTA 2: Specific tax rates vary significantly by exact SKU and HS code.
+                  {isZh
+                    ? 'CTA 2：不同 SKU 与 HS 编码对应税率差异较大。'
+                    : 'CTA 2: Specific tax rates vary significantly by exact SKU and HS code.'}
                 </p>
                 <a
                   href="mailto:hello@factorygoglobal.com?subject=Need%20Accurate%20Export%20Cost%20Quote"
@@ -544,10 +552,12 @@ function App() {
               <h2 className="text-2xl">{isZh ? 'Step 5. 智能物料生成' : 'Step 5. Smart Material Generation'}</h2>
 
               <div className="rounded-2xl border border-black/10 bg-sand p-4">
-                <label className="mb-2 block text-sm font-medium">Upload 1-3 high-resolution product/factory images</label>
+                <label className="mb-2 block text-sm font-medium">
+                  {isZh ? '请上传 1-3 张高清产品/工厂图片' : 'Upload 1-3 high-resolution product/factory images'}
+                </label>
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold">
                   <Upload className="h-4 w-4" />
-                  Select Images
+                  {isZh ? '选择图片' : 'Select Images'}
                   <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} />
                 </label>
                 <div className="mt-3 grid gap-3 md:grid-cols-3">
@@ -587,16 +597,18 @@ function App() {
                           : 'linear-gradient(120deg, #25544a, #0f2f29)',
                       }}
                     >
-                      <p className="text-xs uppercase tracking-[0.22em] text-white/70">Hero Section</p>
-                      <h4 className="mt-2 text-2xl leading-tight">{ai?.slogan || 'Precision Manufacturing, Ready for Global Growth'}</h4>
+                      <p className="text-xs uppercase tracking-[0.22em] text-white/70">{isZh ? '主视觉区' : 'Hero Section'}</p>
+                      <h4 className="mt-2 text-2xl leading-tight">
+                        {ai?.slogan || (isZh ? '精准制造，助力品牌全球增长' : 'Precision Manufacturing, Ready for Global Growth')}
+                      </h4>
                     </div>
                     <div className="space-y-3 p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-black/60">Trust Indicators</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-black/60">{isZh ? '信任指标' : 'Trust Indicators'}</p>
                       <div className="flex flex-wrap gap-2">
-                        <Tag>{leadData.step1.currentCapacity || 'Capacity data pending'}</Tag>
+                        <Tag>{leadData.step1.currentCapacity || (isZh ? '待填写产能数据' : 'Capacity data pending')}</Tag>
                         {leadData.step1.certifications.length > 0
                           ? leadData.step1.certifications.map((item) => <Tag key={item}>{item}</Tag>)
-                          : <Tag>No certification provided</Tag>}
+                          : <Tag>{isZh ? '暂无认证信息' : 'No certification provided'}</Tag>}
                       </div>
                       <ul className="space-y-1.5 text-sm text-black/75">
                         {(ai?.valueProps || []).map((point) => (
@@ -625,27 +637,31 @@ function App() {
                   {pdfError && <p className="mb-3 text-xs text-clay">{pdfError}</p>}
 
                   <div ref={pdfRef} className="rounded-2xl border border-black/10 bg-white p-5 text-black">
-                    <p className="text-xs uppercase tracking-[0.2em] text-black/55">Company One-pager</p>
-                    <h4 className="mt-2 text-2xl">{leadData.step1.companyName || 'Your Company Name'}</h4>
-                    <p className="mt-2 text-sm text-black/70">{ai?.differentiation || 'AI strategy summary will appear here.'}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '企业单页简介' : 'Company One-pager'}</p>
+                    <h4 className="mt-2 text-2xl">{leadData.step1.companyName || (isZh ? '你的公司名称' : 'Your Company Name')}</h4>
+                    <p className="mt-2 text-sm text-black/70">
+                      {ai?.differentiation || (isZh ? 'AI 战略摘要将在这里显示。' : 'AI strategy summary will appear here.')}
+                    </p>
 
                     <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                      <MiniMetric label="MOQ" value="1 x 20ft container" />
-                      <MiniMetric label="Lead Time" value="25-35 days" />
-                      <MiniMetric label="Primary Market" value={currentMarket || 'TBD'} />
-                      <MiniMetric label="Factory Scale" value={leadData.step1.currentCapacity || 'TBD'} />
+                      <MiniMetric label="MOQ" value={isZh ? '1 个 20 尺柜' : '1 x 20ft container'} />
+                      <MiniMetric label={isZh ? '交期' : 'Lead Time'} value={isZh ? '25-35 天' : '25-35 days'} />
+                      <MiniMetric label={isZh ? '目标市场' : 'Primary Market'} value={currentMarket || (isZh ? '待定' : 'TBD')} />
+                      <MiniMetric label={isZh ? '工厂规模' : 'Factory Scale'} value={leadData.step1.currentCapacity || (isZh ? '待定' : 'TBD')} />
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-moss/30 bg-moss/8 p-5">
-                <p className="text-xs uppercase tracking-[0.2em] text-moss/80">Final CTA</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-moss/80">{isZh ? '终极 CTA' : 'Final CTA'}</p>
                 <h3 className="mt-2 text-2xl">
                   {isZh ? '需要高级动效独立站与 Amazon 开店支持？' : 'Need a premium export website + Amazon launch support?'}
                 </h3>
                 <p className="mt-2 text-sm text-black/70">
-                  Get a high-conversion site with advanced motion, buyer outreach workflow, and overseas demand generation support.
+                  {isZh
+                    ? '获取高转化独立站、海外买家触达流程与持续增长支持。'
+                    : 'Get a high-conversion site with advanced motion, buyer outreach workflow, and overseas demand generation support.'}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <a
@@ -679,9 +695,11 @@ function App() {
                     : 'linear-gradient(120deg, #25544a, #0f2f29)',
                 }}
               >
-                <p className="text-xs uppercase tracking-[0.24em] text-white/70">One-page Full Preview</p>
-                <h2 className="mt-2 text-4xl">{ai?.slogan || 'Export-ready manufacturing with modern positioning'}</h2>
-                <p className="mt-3 max-w-2xl text-white/80">{ai?.trust || 'Upload images and run strategy to enrich this preview.'}</p>
+                <p className="text-xs uppercase tracking-[0.24em] text-white/70">{isZh ? 'One-page 全屏预览' : 'One-page Full Preview'}</p>
+                <h2 className="mt-2 text-4xl">{ai?.slogan || (isZh ? '面向全球市场的现代化制造方案' : 'Export-ready manufacturing with modern positioning')}</h2>
+                <p className="mt-3 max-w-2xl text-white/80">
+                  {ai?.trust || (isZh ? '上传图片并完成分析后，可获得更完整的预览内容。' : 'Upload images and run strategy to enrich this preview.')}
+                </p>
               </div>
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {(ai?.valueProps || []).map((item) => (
