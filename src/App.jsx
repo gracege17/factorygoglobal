@@ -768,7 +768,9 @@ function App() {
 
       <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 shadow-soft backdrop-blur md:mb-6 md:p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold text-black/55">{isZh ? '当前进度' : 'Progress'}</p>
+          <p className="text-sm font-semibold text-ink">
+            {step}. {stepLabels[step - 1]}
+          </p>
           <div className="rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-black/70">
             {isZh ? '步骤' : 'Step'} {step} / {steps.length}
           </div>
@@ -781,7 +783,11 @@ function App() {
           {stepLabels.map((item, index) => (
             <div
               key={item}
-              className={`min-w-max rounded-lg px-2.5 py-1.5 md:min-w-0 md:px-3 md:py-2 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}
+              className={`min-w-max border px-2.5 py-1.5 md:min-w-0 md:px-3 md:py-2 ${
+                step === index + 1
+                  ? 'rounded-xl border-moss/20 bg-moss/8 font-semibold text-moss'
+                  : 'rounded-lg border-transparent bg-transparent text-black/40'
+              }`}
             >
               {index + 1}. {item}
             </div>
@@ -801,8 +807,7 @@ function App() {
                 </p>
               </div>
 
-              <div className="space-y-4 xl:grid xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)] xl:gap-5 xl:space-y-0">
-                <div className="space-y-4">
+              <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field label={isZh ? '公司名称' : 'Company Name'}>
                       <input
@@ -891,27 +896,6 @@ function App() {
                       })}
                     </div>
                   </Field>
-                </div>
-
-                <aside className="space-y-4 rounded-2xl border border-black/10 bg-sand/60 p-4 sm:p-5">
-                  <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-black/55">{isZh ? '填写后将生成' : 'Next Output'}</p>
-                    <div className="mt-3 space-y-3 text-sm text-black/70">
-                      <div>
-                        <p className="font-medium text-ink">{isZh ? '市场推荐' : 'Market Recommendation'}</p>
-                        <p className="mt-1 text-black/60">{isZh ? '优先进入的目标市场' : 'Suggested priority market'}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-ink">{isZh ? '定位建议' : 'Positioning Advice'}</p>
-                        <p className="mt-1 text-black/60">{isZh ? '你适合主打什么卖点' : 'What value proposition to lead with'}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-ink">{isZh ? '认证重点' : 'Certification Focus'}</p>
-                        <p className="mt-1 text-black/60">{isZh ? '下一步优先补什么' : 'What to prioritize next'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
               </div>
 
               <button
@@ -1663,7 +1647,7 @@ function App() {
         </div>
       )}
 
-      <section className="mt-5 rounded-2xl border border-black/10 bg-white/70 p-4 text-xs leading-relaxed text-black/60 md:mt-8">
+      <div className="mt-6 px-1 text-xs leading-relaxed text-black/50 md:mt-8">
         <p>
           {isZh
             ? '免责声明：本工具输出仅用于方向性参考，不构成法律、税务、金融或合规承诺。不同国家准入规则与税率请以官方和专业机构意见为准。'
@@ -1674,7 +1658,7 @@ function App() {
             ? '隐私说明：你上传的图片与输入信息仅用于当前会话生成预览内容。接入真实后端前，不会自动同步到第三方系统。'
             : 'Privacy Notice: Uploaded images and form inputs are used to generate this session preview only. Before backend integration, data is not automatically synced to third-party systems.'}
         </p>
-      </section>
+      </div>
     </main>
   )
 }
