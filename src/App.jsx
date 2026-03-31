@@ -1071,10 +1071,12 @@ function App() {
                         onBlur={handleCompanyNameBlur}
                         placeholder={isZh ? '例如：浙江某某实业有限公司' : 'e.g. Zhejiang Eco Paper Co., Ltd'}
                       />
-                      <div className="mt-1 flex items-center justify-end text-xs text-black/45">
-                        <span>{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
+                        <span className={companyNameError ? 'text-clay' : 'text-black/45'}>
+                          {companyNameError || ' '}
+                        </span>
+                        <span className="text-black/45">{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
                       </div>
-                      {companyNameError && <p className="mt-1 text-xs text-clay">{companyNameError}</p>}
                     </Field>
                     <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                       <input
