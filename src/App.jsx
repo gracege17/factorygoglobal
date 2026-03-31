@@ -8,7 +8,9 @@ import {
   Languages,
   Loader2,
   Maximize2,
+  Plus,
   ShieldCheck,
+  Trash2,
   TrendingUp,
   Upload,
   Video,
@@ -192,43 +194,42 @@ const validateTargetMarket = (value, isZh) => {
   return ''
 }
 
-const parseProductItems = (raw = '') =>
-  raw
-    .split(/[\n,，、;；]+/)
-    .map((item) => item.trim())
-    .filter(Boolean)
+const getFilledProductItems = (items = []) => items.map((item) => item.trim()).filter(Boolean)
 
-const validateProductItems = (raw, isZh) => {
-  const items = parseProductItems(raw)
-  if (items.length < PRODUCT_LIST_MIN) {
+const validateProductItems = (items, isZh) => {
+  const filledItems = getFilledProductItems(items)
+  const uniqueItems = [...new Set(filledItems)]
+  if (uniqueItems.length < PRODUCT_LIST_MIN) {
     return {
       error: isZh
         ? `请至少填写 ${PRODUCT_LIST_MIN} 个产品。`
         : `Please provide at least ${PRODUCT_LIST_MIN} products.`,
-      items,
+      items: uniqueItems,
     }
   }
 
-  if (items.length > PRODUCT_LIST_MAX) {
+  if (uniqueItems.length > PRODUCT_LIST_MAX) {
     return {
       error: isZh
         ? `最多填写 ${PRODUCT_LIST_MAX} 个产品。`
         : `Please provide no more than ${PRODUCT_LIST_MAX} products.`,
-      items,
+      items: uniqueItems,
     }
   }
 
-  const invalidItem = items.find((item) => item.length < 2 || item.length > PRODUCT_ITEM_MAX_LENGTH || !productItemAllowedPattern.test(item))
+  const invalidItem = uniqueItems.find(
+    (item) => item.length < 2 || item.length > PRODUCT_ITEM_MAX_LENGTH || !productItemAllowedPattern.test(item),
+  )
   if (invalidItem) {
     return {
       error: isZh
         ? `每个产品需 2-${PRODUCT_ITEM_MAX_LENGTH} 字，且仅支持中英文、数字和常见符号。`
         : `Each product must be 2-${PRODUCT_ITEM_MAX_LENGTH} chars and use letters/numbers/common symbols.`,
-      items,
+      items: uniqueItems,
     }
   }
 
-  return { error: '', items }
+  return { error: '', items: uniqueItems }
 }
 
 function App() {
@@ -267,7 +268,7 @@ function App() {
     },
     step5: {
       uploadedMedia: [],
-      productListInput: '',
+      productItems: ['', '', ''],
     },
   })
 
@@ -352,23 +353,54 @@ function App() {
     setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
   }
 
-  const handleProductListChange = (value) => {
+  const handleProductItemChange = (index, value) => {
     setLeadData((prev) => ({
       ...prev,
       step5: {
         ...prev.step5,
-        productListInput: value,
+        productItems: prev.step5.productItems.map((item, itemIndex) => (itemIndex === index ? value : item)),
       },
     }))
 
     if (productListTouched) {
-      setProductListError(validateProductItems(value, isZh).error)
+      setProductListError(validateProductItems(leadData.step5.productItems.map((item, itemIndex) => (itemIndex === index ? value : item)), isZh).error)
     }
   }
 
-  const handleProductListBlur = () => {
+  const handleProductItemBlur = () => {
     setProductListTouched(true)
-    setProductListError(validateProductItems(leadData.step5.productListInput, isZh).error)
+    setProductListError(validateProductItems(leadData.step5.productItems, isZh).error)
+  }
+
+  const addProductItem = () => {
+    setLeadData((prev) => {
+      if (prev.step5.productItems.length >= PRODUCT_LIST_MAX) {
+        return prev
+      }
+      return {
+        ...prev,
+        step5: {
+          ...prev.step5,
+          productItems: [...prev.step5.productItems, ''],
+        },
+      }
+    })
+  }
+
+  const removeProductItem = (index) => {
+    setLeadData((prev) => {
+      if (prev.step5.productItems.length <= PRODUCT_LIST_MIN) {
+        return prev
+      }
+      const nextItems = prev.step5.productItems.filter((_, itemIndex) => itemIndex !== index)
+      return {
+        ...prev,
+        step5: {
+          ...prev.step5,
+          productItems: nextItems,
+        },
+      }
+    })
   }
 
   useEffect(() => {
@@ -404,8 +436,8 @@ function App() {
     if (!productListTouched) {
       return
     }
-    setProductListError(validateProductItems(leadData.step5.productListInput, isZh).error)
-  }, [isZh, leadData.step5.productListInput, productListTouched])
+    setProductListError(validateProductItems(leadData.step5.productItems, isZh).error)
+  }, [isZh, leadData.step5.productItems, productListTouched])
 
   const toggleCertification = (cert) => {
     setLeadData((prev) => {
@@ -541,7 +573,7 @@ function App() {
       return
     }
 
-    const productValidation = validateProductItems(leadData.step5.productListInput, isZh)
+    const productValidation = validateProductItems(leadData.step5.productItems, isZh)
     if (productValidation.error) {
       setProductListTouched(true)
       setProductListError(productValidation.error)
@@ -593,7 +625,7 @@ function App() {
 
   const ai = leadData.step2.aiPositioning
   const primaryImage = leadData.step5.uploadedMedia.find((item) => item.kind === 'image')?.url
-  const parsedProducts = parseProductItems(leadData.step5.productListInput)
+  const parsedProducts = getFilledProductItems(leadData.step5.productItems)
 
   return (
     <main className="mx-auto max-w-6xl px-3 pb-14 pt-4 text-ink sm:px-4 md:px-8 md:pt-8">
@@ -935,24 +967,44 @@ function App() {
                 <label className="mb-2 block text-sm font-medium">
                   {isZh ? `主推产品清单（必填 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个）` : `Key Product List (Required: ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX})`}
                 </label>
-                <textarea
-                  value={leadData.step5.productListInput}
-                  onChange={(e) => handleProductListChange(e.target.value)}
-                  onBlur={handleProductListBlur}
-                  rows={4}
-                  className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
-                  placeholder={
-                    isZh
-                      ? '每行或用逗号分隔填写一个产品，例如：\n竹纤维面巾纸\n厨房用纸\n抽纸'
-                      : 'One product per line or separated by commas, e.g.\nBamboo facial tissue\nKitchen paper towel\nPocket tissue'
-                  }
-                />
+                <div className="space-y-2">
+                  {leadData.step5.productItems.map((item, index) => (
+                    <div key={`product-${index}`} className="flex items-center gap-2">
+                      <input
+                        value={item}
+                        onChange={(e) => handleProductItemChange(index, e.target.value)}
+                        onBlur={handleProductItemBlur}
+                        className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                        placeholder={isZh ? `产品 ${index + 1}，例如：竹纤维面巾纸` : `Product ${index + 1}, e.g. Bamboo facial tissue`}
+                      />
+                      {leadData.step5.productItems.length > PRODUCT_LIST_MIN && (
+                        <button
+                          type="button"
+                          onClick={() => removeProductItem(index)}
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/15 text-black/65"
+                          aria-label={isZh ? '删除产品' : 'Remove product'}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addProductItem}
+                  disabled={leadData.step5.productItems.length >= PRODUCT_LIST_MAX}
+                  className="mt-3 inline-flex items-center gap-2 rounded-xl border border-black/15 bg-white px-3 py-2 text-xs font-semibold text-black/70 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {isZh ? '新增一条产品' : 'Add Product Item'}
+                </button>
                 <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
                   <span className={productListError ? 'text-clay' : 'text-black/50'}>
                     {productListError ||
                       (isZh
-                        ? `请填写 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个产品；支持换行或逗号分隔`
-                        : `Provide ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} products; use line breaks or commas`)}
+                        ? `请填写 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个主推产品，每条一项`
+                        : `Provide ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} key products, one item per row`)}
                   </span>
                   <span className="text-black/45">
                     {parsedProducts.length}/{PRODUCT_LIST_MAX}
