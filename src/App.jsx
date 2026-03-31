@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Download,
   Globe2,
+  Languages,
   Loader2,
   Maximize2,
   ShieldCheck,
@@ -68,6 +69,7 @@ function App() {
   const [analyzing, setAnalyzing] = useState(false)
   const [formError, setFormError] = useState('')
   const [analysisError, setAnalysisError] = useState('')
+  const [lang, setLang] = useState('en')
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [leadData, setLeadData] = useState({
@@ -96,6 +98,10 @@ function App() {
   const costData = useMemo(() => getCostData(currentMarket), [currentMarket])
 
   const progress = (step / steps.length) * 100
+  const isZh = lang === 'zh'
+  const stepLabels = isZh
+    ? ['基础信息', 'AI 战略', '方向确认', '成本框架', '物料生成']
+    : steps
 
   const updateStep1 = (field, value) => {
     setLeadData((prev) => ({
@@ -128,7 +134,7 @@ function App() {
     }
 
     if (!leadData.step1.companyName.trim() || !leadData.step1.productCategory.trim()) {
-      setFormError('Please enter company name and product category to continue.')
+      setFormError(isZh ? '请先填写公司名称和主营品类。' : 'Please enter company name and product category to continue.')
       return
     }
 
@@ -153,7 +159,9 @@ function App() {
           aiPositioning: fallback,
         },
       }))
-      setAnalysisError('AI service is temporarily unavailable. Showing fallback recommendation.')
+      setAnalysisError(
+        isZh ? 'AI 服务暂时不可用，已展示默认建议。' : 'AI service is temporarily unavailable. Showing fallback recommendation.',
+      )
       setStep(2)
     } finally {
       setAnalyzing(false)
@@ -231,13 +239,25 @@ function App() {
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-moss/70">FactoryGoGlobal AI</p>
-            <h1 className="mt-1 text-3xl md:text-4xl">B2B Export Readiness Navigator</h1>
+            <h1 className="mt-1 text-3xl md:text-4xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
             <p className="mt-2 max-w-2xl text-sm text-black/65 md:text-base">
-              Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.
+              {isZh
+                ? '快速评估出海可行性，找到差异化定位，并生成可直接转化的营销物料。'
+                : 'Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.'}
             </p>
           </div>
-          <div className="rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-black/70">
-            Step {step} / {steps.length}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
+              className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black/75"
+            >
+              <Languages className="h-3.5 w-3.5" />
+              {isZh ? '切换 EN' : '切换中文'}
+            </button>
+            <div className="rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-black/70">
+              {isZh ? '步骤' : 'Step'} {step} / {steps.length}
+            </div>
           </div>
         </div>
 
@@ -246,7 +266,7 @@ function App() {
         </div>
 
         <div className="mt-4 grid gap-2 text-xs text-black/55 md:grid-cols-5">
-          {steps.map((item, index) => (
+          {stepLabels.map((item, index) => (
             <div key={item} className={`rounded-lg px-3 py-2 ${step === index + 1 ? 'bg-moss/10 text-moss' : 'bg-black/5'}`}>
               {index + 1}. {item}
             </div>
@@ -314,7 +334,7 @@ function App() {
                 className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55"
               >
                 {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-                Start AI Strategic Analysis
+                {isZh ? '开始 AI 战略分析' : 'Start AI Strategic Analysis'}
               </button>
               {formError && <p className="text-sm text-clay">{formError}</p>}
             </div>
@@ -322,7 +342,7 @@ function App() {
 
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">Step 2. AI Strategy & Positioning</h2>
+              <h2 className="text-2xl">{isZh ? 'Step 2. AI 战略定位与市场推荐' : 'Step 2. AI Strategy & Positioning'}</h2>
 
               {analyzing && (
                 <div className="space-y-3">
@@ -368,7 +388,9 @@ function App() {
                 </>
               )}
 
-              <p className="text-sm text-black/55">Disclaimer: Directional suggestion only, for preliminary reference.</p>
+              <p className="text-sm text-black/55">
+                {isZh ? '免责声明：方向性建议，仅供初步参考。' : 'Disclaimer: Directional suggestion only, for preliminary reference.'}
+              </p>
               {analysisError && <p className="text-sm text-clay">{analysisError}</p>}
 
               <div className="flex justify-end">
@@ -376,7 +398,7 @@ function App() {
                   className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
                   onClick={() => setStep(3)}
                 >
-                  Continue
+                  {isZh ? '继续' : 'Continue'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -385,7 +407,7 @@ function App() {
 
           {step === 3 && ai && (
             <div className="space-y-5">
-              <h2 className="text-2xl">Step 3. Confirm Target Market</h2>
+              <h2 className="text-2xl">{isZh ? 'Step 3. 客户意向确认' : 'Step 3. Confirm Target Market'}</h2>
 
               <div className="grid gap-4 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
@@ -396,7 +418,7 @@ function App() {
                       selectedPath === 'accept' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
                     }`}
                   >
-                    <p className="font-semibold">Option A: Accept AI Recommendation</p>
+                    <p className="font-semibold">{isZh ? '选项 A：接受 AI 推荐' : 'Option A: Accept AI Recommendation'}</p>
                     <p className="mt-1 text-sm text-black/60">
                       Use {ai.topMarkets[0].country} as primary launch market and continue.
                     </p>
@@ -409,7 +431,7 @@ function App() {
                       selectedPath === 'manual' ? 'border-moss bg-moss/5' : 'border-black/10 bg-white'
                     }`}
                   >
-                    <p className="font-semibold">Option B: Enter Your Own Market</p>
+                    <p className="font-semibold">{isZh ? '选项 B：手动输入目标国家' : 'Option B: Enter Your Own Market'}</p>
                     <input
                       value={leadData.step3.targetMarket}
                       onChange={(e) =>
@@ -426,7 +448,9 @@ function App() {
 
                 <aside className="rounded-2xl border border-clay/30 bg-clay/5 p-5">
                   <p className="text-xs uppercase tracking-[0.18em] text-clay/80">CTA 1</p>
-                  <h3 className="mt-2 text-xl">Need deep market compliance research?</h3>
+                  <h3 className="mt-2 text-xl">
+                    {isZh ? '需要针对目标国家做深度准入调研吗？' : 'Need deep market compliance research?'}
+                  </h3>
                   <p className="mt-2 text-sm text-black/65">
                     Get country-specific entry requirements and competitor mapping from our expert team.
                   </p>
@@ -434,7 +458,7 @@ function App() {
                     href="mailto:hello@factorygoglobal.com?subject=Need%20Deep%20Market%20Research"
                     className="mt-4 inline-block rounded-xl bg-clay px-4 py-2 text-sm font-semibold text-white"
                   >
-                    Contact Expert Team
+                    {isZh ? '联系专家团队' : 'Contact Expert Team'}
                   </a>
                 </aside>
               </div>
@@ -445,14 +469,14 @@ function App() {
                   onClick={() => setStep(2)}
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {isZh ? '返回' : 'Back'}
                 </button>
                 <button
                   className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
                   onClick={handleStep3Continue}
                   disabled={selectedPath === 'manual' && !leadData.step3.targetMarket}
                 >
-                  Continue
+                  {isZh ? '继续' : 'Continue'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -461,7 +485,7 @@ function App() {
 
           {step === 4 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">Step 4. Cost Framework</h2>
+              <h2 className="text-2xl">{isZh ? 'Step 4. 出海成本概算' : 'Step 4. Cost Framework'}</h2>
               <p className="text-sm text-black/60">
                 Estimated for <span className="font-semibold">{currentMarket || 'your selected market'}</span>. MVP uses rough ranges.
               </p>
@@ -481,7 +505,7 @@ function App() {
                   href="mailto:hello@factorygoglobal.com?subject=Need%20Accurate%20Export%20Cost%20Quote"
                   className="mt-3 inline-block rounded-xl bg-clay px-4 py-2 text-sm font-semibold text-white"
                 >
-                  Get Accurate Cost Quote
+                  {isZh ? '获取精准报价' : 'Get Accurate Cost Quote'}
                 </a>
               </div>
 
@@ -491,13 +515,13 @@ function App() {
                   onClick={() => setStep(3)}
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back
+                  {isZh ? '返回' : 'Back'}
                 </button>
                 <button
                   className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-white"
                   onClick={() => setStep(5)}
                 >
-                  Continue
+                  {isZh ? '继续' : 'Continue'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -506,7 +530,7 @@ function App() {
 
           {step === 5 && (
             <div className="space-y-6">
-              <h2 className="text-2xl">Step 5. Smart Material Generation</h2>
+              <h2 className="text-2xl">{isZh ? 'Step 5. 智能物料生成' : 'Step 5. Smart Material Generation'}</h2>
 
               <div className="rounded-2xl border border-black/10 bg-sand p-4">
                 <label className="mb-2 block text-sm font-medium">Upload 1-3 high-resolution product/factory images</label>
@@ -528,13 +552,13 @@ function App() {
               <div className="grid gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-black/10 bg-white p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-xl">One-page Marketing Site Preview</h3>
+                    <h3 className="text-xl">{isZh ? 'One-page 营销页预览' : 'One-page Marketing Site Preview'}</h3>
                     <button
                       onClick={() => setShowFullscreen(true)}
                       className="inline-flex items-center gap-1 rounded-lg border border-black/10 px-2.5 py-1.5 text-xs"
                     >
                       <Maximize2 className="h-3.5 w-3.5" />
-                      Fullscreen
+                      {isZh ? '全屏预览' : 'Fullscreen'}
                     </button>
                   </div>
 
@@ -572,13 +596,13 @@ function App() {
 
                 <div className="rounded-2xl border border-black/10 bg-white p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-xl">One-pager PDF Preview</h3>
+                    <h3 className="text-xl">{isZh ? 'One-pager PDF 预览' : 'One-pager PDF Preview'}</h3>
                     <button
                       onClick={downloadPdf}
                       className="inline-flex items-center gap-1 rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Download PDF
+                      {isZh ? '下载 PDF' : 'Download PDF'}
                     </button>
                   </div>
 
@@ -599,7 +623,9 @@ function App() {
 
               <div className="rounded-2xl border border-moss/30 bg-moss/8 p-5">
                 <p className="text-xs uppercase tracking-[0.2em] text-moss/80">Final CTA</p>
-                <h3 className="mt-2 text-2xl">Need a premium export website + Amazon launch support?</h3>
+                <h3 className="mt-2 text-2xl">
+                  {isZh ? '需要高级动效独立站与 Amazon 开店支持？' : 'Need a premium export website + Amazon launch support?'}
+                </h3>
                 <p className="mt-2 text-sm text-black/70">
                   Get a high-conversion site with advanced motion, buyer outreach workflow, and overseas demand generation support.
                 </p>
@@ -610,13 +636,13 @@ function App() {
                     rel="noreferrer"
                     className="rounded-xl bg-moss px-4 py-2 text-sm font-semibold text-white"
                   >
-                    Connect on WhatsApp
+                    {isZh ? 'WhatsApp 联系' : 'Connect on WhatsApp'}
                   </a>
                   <a
                     href="mailto:hello@factorygoglobal.com?subject=Premium%20Export%20Service%20Inquiry"
                     className="rounded-xl border border-moss px-4 py-2 text-sm font-semibold text-moss"
                   >
-                    Contact via Email
+                    {isZh ? '邮件联系' : 'Contact via Email'}
                   </a>
                 </div>
               </div>
