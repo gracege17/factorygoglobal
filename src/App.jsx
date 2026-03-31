@@ -254,6 +254,26 @@ const validateProductPhotos = (productItems, productPhotos, isZh) => {
   return ''
 }
 
+const usWebsiteCopy = {
+  heroEyebrow: 'ONE-PAGE WEBSITE PREVIEW',
+  heroTitle: 'Reliable B2B Manufacturing Partner for U.S. Buyers',
+  heroSubtitle:
+    'Reduce sourcing risk with stable lead times, transparent quality control, and direct factory communication.',
+  aboutTitle: 'About Us',
+  aboutText:
+    'We help importers and brand owners scale with dependable manufacturing, compliance-ready workflows, and long-term supply support.',
+  whyTitle: 'Why Buyers Choose Us',
+  whyItems: [
+    'Predictable delivery windows for repeat purchase planning',
+    'Quality and compliance records with clear documentation',
+    'Direct factory communication for faster decisions',
+  ],
+  productTitle: 'Product Info',
+  trustTitle: 'Trust & Certifications',
+  contactTitle: 'Contact Us',
+  contactText: 'Request samples, pricing, lead time, and customization details from our team.',
+}
+
 function App() {
   const [step, setStep] = useState(1)
   const [analyzing, setAnalyzing] = useState(false)
@@ -1128,13 +1148,13 @@ function App() {
                 <div className="grid gap-5 xl:grid-cols-2">
                 <div className="rounded-2xl border border-black/10 bg-white p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-xl">{isZh ? 'One-page 营销页预览' : 'One-page Marketing Site Preview'}</h3>
+                    <h3 className="text-xl">One-page Marketing Site Preview (US)</h3>
                     <button
                       onClick={() => setShowFullscreen(true)}
                       className="inline-flex items-center gap-1 rounded-lg border border-black/10 px-2.5 py-1.5 text-xs"
                     >
                       <Maximize2 className="h-3.5 w-3.5" />
-                      {isZh ? '全屏预览' : 'Fullscreen'}
+                      Fullscreen
                     </button>
                   </div>
 
@@ -1147,21 +1167,21 @@ function App() {
                           : 'linear-gradient(120deg, #25544a, #0f2f29)',
                       }}
                     >
-                      <p className="text-xs uppercase tracking-[0.22em] text-white/70">{isZh ? '主视觉区' : 'Hero Section'}</p>
+                      <p className="text-xs uppercase tracking-[0.22em] text-white/70">{usWebsiteCopy.heroEyebrow}</p>
                       <h4 className="mt-2 text-2xl leading-tight">
-                        {ai?.slogan || (isZh ? '精准制造，助力品牌全球增长' : 'Precision Manufacturing, Ready for Global Growth')}
+                        {usWebsiteCopy.heroTitle}
                       </h4>
                     </div>
                     <div className="space-y-3 p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-black/60">{isZh ? '信任指标' : 'Trust Indicators'}</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-black/60">Trust Indicators</p>
                       <div className="flex flex-wrap gap-2">
-                        <Tag>{leadData.step1.currentCapacity || (isZh ? '待填写产能数据' : 'Capacity data pending')}</Tag>
+                        <Tag>{leadData.step1.currentCapacity || 'Capacity data pending'}</Tag>
                         {leadData.step1.certifications.length > 0
                           ? leadData.step1.certifications.map((item) => <Tag key={item}>{item}</Tag>)
-                          : <Tag>{isZh ? '暂无认证信息' : 'No certification provided'}</Tag>}
+                          : <Tag>No certification provided</Tag>}
                       </div>
                       <ul className="space-y-1.5 text-sm text-black/75">
-                        {(ai?.valueProps || []).map((point) => (
+                        {usWebsiteCopy.whyItems.map((point) => (
                           <li key={point} className="flex items-start gap-2">
                             <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
                             <span>{point}</span>
@@ -1169,11 +1189,11 @@ function App() {
                         ))}
                       </ul>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.15em] text-black/55">{isZh ? '主推产品' : 'Key Products'}</p>
+                        <p className="text-xs uppercase tracking-[0.15em] text-black/55">Key Products</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {parsedProducts.length > 0
                             ? parsedProducts.slice(0, PRODUCT_LIST_MAX).map((item) => <Tag key={item}>{item}</Tag>)
-                            : <Tag>{isZh ? '请先填写 3-5 个产品' : 'Please add 3-5 products'}</Tag>}
+                            : <Tag>Please add 3-5 products</Tag>}
                         </div>
                       </div>
                     </div>
@@ -1278,25 +1298,25 @@ function App() {
                   : 'linear-gradient(120deg, #25544a, #0f2f29)',
               }}
             >
-              <p className="text-xs uppercase tracking-[0.24em] text-white/70">{isZh ? 'One-page 全屏预览' : 'One-page Full Preview'}</p>
-              <h2 className="mt-2 text-4xl">{ai?.slogan || (isZh ? '面向全球市场的现代化制造方案' : 'Export-ready manufacturing with modern positioning')}</h2>
+              <p className="text-xs uppercase tracking-[0.24em] text-white/70">{usWebsiteCopy.heroEyebrow}</p>
+              <h2 className="mt-2 text-4xl">{usWebsiteCopy.heroTitle}</h2>
               <p className="mt-3 max-w-2xl text-white/80">
-                {ai?.trust || (isZh ? '上传图片并完成分析后，可获得更完整的预览内容。' : 'Upload images and run strategy to enrich this preview.')}
+                {usWebsiteCopy.heroSubtitle}
               </p>
             </div>
 
             <section className="mt-6 rounded-2xl border border-black/10 bg-sand/40 p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'About Us' : 'About Us'}</p>
-              <h3 className="mt-2 text-2xl">{leadData.step1.companyName || (isZh ? '你的公司名称' : 'Your Company')}</h3>
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.aboutTitle}</p>
+              <h3 className="mt-2 text-2xl">{leadData.step1.companyName || 'Your Company'}</h3>
               <p className="mt-2 text-sm text-black/70">
-                {ai?.differentiation || (isZh ? '我们专注于稳定交付与长期合作，支持海外市场合规落地。' : 'We focus on stable delivery and long-term partnerships for global market entry.')}
+                {usWebsiteCopy.aboutText}
               </p>
             </section>
 
             <section className="mt-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Why Us' : 'Why Us'}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.whyTitle}</p>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
-                {(ai?.valueProps || []).map((item) => (
+                {usWebsiteCopy.whyItems.map((item) => (
                   <div key={item} className="rounded-xl border border-black/10 bg-white p-4 text-sm">
                     {item}
                   </div>
@@ -1305,7 +1325,7 @@ function App() {
             </section>
 
             <section className="mt-6">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Product Info' : 'Product Info'}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.productTitle}</p>
               <div className="mt-3 space-y-4">
                 {productEntries.map((entry) => (
                   <div key={`${entry.index}-${entry.name}`} className="rounded-2xl border border-black/10 bg-white p-4">
@@ -1326,27 +1346,27 @@ function App() {
             </section>
 
             <section className="mt-6 rounded-2xl border border-black/10 bg-white p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{isZh ? 'Trust & Certifications' : 'Trust & Certifications'}</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-black/55">{usWebsiteCopy.trustTitle}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Tag>{leadData.step1.currentCapacity || (isZh ? '待填写产能数据' : 'Capacity pending')}</Tag>
+                <Tag>{leadData.step1.currentCapacity || 'Capacity pending'}</Tag>
                 {leadData.step1.certifications.length > 0
                   ? leadData.step1.certifications.map((item) => <Tag key={item}>{item}</Tag>)
-                  : <Tag>{isZh ? '认证信息待补充' : 'Certifications pending'}</Tag>}
+                  : <Tag>Certifications pending</Tag>}
               </div>
             </section>
 
             <section className="mt-6 rounded-2xl border border-moss/30 bg-moss/8 p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-moss/80">{isZh ? 'Contact Us' : 'Contact Us'}</p>
-              <h3 className="mt-2 text-2xl">{isZh ? '联系工厂团队' : 'Contact Factory Team'}</h3>
+              <p className="text-xs uppercase tracking-[0.18em] text-moss/80">{usWebsiteCopy.contactTitle}</p>
+              <h3 className="mt-2 text-2xl">Contact Factory Team</h3>
               <p className="mt-2 text-sm text-black/70">
-                {isZh ? '支持样品、报价、交期与定制需求沟通。' : 'Available for sample requests, quotes, lead-time, and customization.'}
+                {usWebsiteCopy.contactText}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <a
                   href="mailto:hello@factorygoglobal.com?subject=FactoryGoGlobal%20Inquiry"
                   className="w-full rounded-xl bg-ink px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto"
                 >
-                  {isZh ? '邮件联系' : 'Email Us'}
+                  Email Us
                 </a>
                 <a
                   href="https://wa.me/0000000000?text=Hi%20FactoryGoGlobal%2C%20I%20want%20to%20discuss%20products."
@@ -1354,7 +1374,7 @@ function App() {
                   rel="noreferrer"
                   className="w-full rounded-xl border border-ink px-4 py-3 text-center text-sm font-semibold text-ink sm:w-auto"
                 >
-                  {isZh ? 'WhatsApp 联系' : 'WhatsApp'}
+                  WhatsApp
                 </a>
               </div>
             </section>
