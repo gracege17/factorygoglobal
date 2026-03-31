@@ -744,33 +744,35 @@ function App() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-3 pb-14 pt-3 text-ink sm:px-4 md:px-8 md:pt-6">
-      <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 shadow-soft backdrop-blur md:mb-6 md:p-6">
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-moss/70">FactoryGoGlobal AI</p>
-            <h1 className="mt-1 text-2xl md:text-3xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
-            <p className="mt-1 hidden max-w-2xl text-sm text-black/65 md:block">
-              {isZh
-                ? '快速评估出海可行性，找到差异化定位，并生成可直接转化的营销物料。'
-                : 'Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
-              className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black/75"
-            >
-              <Languages className="h-3.5 w-3.5" />
-              {isZh ? '切换 EN' : '切换中文'}
-            </button>
-            <div className="rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-black/70">
-              {isZh ? '步骤' : 'Step'} {step} / {steps.length}
-            </div>
+    <main className="relative mx-auto max-w-6xl px-3 pb-14 pt-3 text-ink sm:px-4 md:px-8 md:pt-6">
+      <div className="absolute right-3 top-3 z-10 sm:right-4 md:right-8 md:top-6">
+        <button
+          type="button"
+          onClick={() => setLang((prev) => (prev === 'zh' ? 'en' : 'zh'))}
+          className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black/75 shadow-soft"
+        >
+          <Languages className="h-3.5 w-3.5" />
+          {isZh ? '切换 EN' : '切换中文'}
+        </button>
+      </div>
+
+      <header className="mb-4 pr-24 md:mb-5">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-moss/70">FactoryGoGlobal AI</p>
+        <h1 className="mt-1 text-2xl md:text-3xl">{isZh ? 'B2B 工厂出海智能导航' : 'B2B Export Readiness Navigator'}</h1>
+        <p className="mt-1 hidden max-w-2xl text-sm text-black/65 md:block">
+          {isZh
+            ? '快速评估出海可行性，找到差异化定位，并生成可直接转化的营销物料。'
+            : 'Assess go-global potential, lock a differentiated strategy, and generate conversion-ready materials in minutes.'}
+        </p>
+      </header>
+
+      <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 shadow-soft backdrop-blur md:mb-6 md:p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-black/55">{isZh ? '当前进度' : 'Progress'}</p>
+          <div className="rounded-xl bg-sand px-3 py-2 text-xs font-semibold text-black/70">
+            {isZh ? '步骤' : 'Step'} {step} / {steps.length}
           </div>
         </div>
-
         <div className="h-1.5 rounded-full bg-black/10">
           <div className="h-1.5 rounded-full bg-moss transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
