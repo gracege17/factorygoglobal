@@ -1012,7 +1012,7 @@ function App() {
         </p>
       </header>
 
-      <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 shadow-soft backdrop-blur md:mb-6 md:p-4">
+      <section className="mb-4 rounded-3xl border border-black/5 bg-white/80 p-3 backdrop-blur md:mb-6 md:p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="text-sm font-semibold text-ink">
             {step}. {stepLabels[step - 1]}
@@ -1063,7 +1063,7 @@ function App() {
                     }
                   >
                   <div className="grid gap-4 md:grid-cols-2">
-                    <QuestionCard>
+                    <QuestionBlock>
                     <Field label={isZh ? '公司名称' : 'Company Name'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1079,8 +1079,8 @@ function App() {
                         <span className="text-black/45">{leadData.step1.companyName.trim().length}/{COMPANY_NAME_MAX_LENGTH}</span>
                       </div>
                     </Field>
-                    </QuestionCard>
-                    <QuestionCard>
+                    </QuestionBlock>
+                    <QuestionBlock>
                     <Field label={isZh ? '主营产品/品类' : 'Main Product Category'}>
                       <input
                         className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1118,10 +1118,10 @@ function App() {
                         </span>
                       </div>
                     </Field>
-                    </QuestionCard>
+                    </QuestionBlock>
                   </div>
 
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field label={isZh ? '大致产能/规模' : 'Current Capacity / Scale'}>
                     <input
                       className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none ring-moss/30 transition focus:ring"
@@ -1140,7 +1140,7 @@ function App() {
                       <span className="text-black/45">{leadData.step1.currentCapacity.trim().length}/{CAPACITY_MAX_LENGTH}</span>
                     </div>
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
                   </SectionCard>
 
                   <SectionCard
@@ -1151,10 +1151,9 @@ function App() {
                         : 'This section determines which markets AI should prioritize for you.'
                     }
                   >
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field label={isZh ? '已有认证' : 'Existing Certifications'}>
-                    <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
-                      <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {certOptions.map((cert) => {
                         const selected = leadData.step1.certifications.includes(cert)
                         return (
@@ -1163,7 +1162,6 @@ function App() {
                           </SelectionChip>
                         )
                       })}
-                      </div>
                     </div>
                     {leadData.step1.certifications.includes('其他') && (
                       <div className="mt-3">
@@ -1184,57 +1182,53 @@ function App() {
                       </div>
                     )}
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
 
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field
                     label={isZh ? '当前主要销售市场' : 'Current Sales Markets'}
                     hint={isZh ? '最多选择 3 项，帮助 AI 判断您目前已有基础的市场方向' : 'Choose up to 3 to show where you already have traction'}
                   >
-                    <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {currentMarketOptions.map((market) => {
-                          const selected = leadData.step1.currentMarkets.includes(market)
-                          return (
-                            <SelectionChip
-                              key={market}
-                              selected={selected}
-                              onClick={() => toggleExclusiveMultiSelect('currentMarkets', market, 3, '暂无出口')}
-                            >
-                              {market}
-                            </SelectionChip>
-                          )
-                        })}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {currentMarketOptions.map((market) => {
+                        const selected = leadData.step1.currentMarkets.includes(market)
+                        return (
+                          <SelectionChip
+                            key={market}
+                            selected={selected}
+                            onClick={() => toggleExclusiveMultiSelect('currentMarkets', market, 3, '暂无出口')}
+                          >
+                            {market}
+                          </SelectionChip>
+                        )
+                      })}
                     </div>
                     {step1Submitted && currentMarketsError && <p className="mt-2 text-xs text-clay">{currentMarketsError}</p>}
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
 
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field
                     label={isZh ? '想重点开发的目标市场' : 'Target Markets to Develop'}
                     hint={isZh ? '最多选择 3 项，建议选择 1-3 个最想重点开发的市场' : 'Choose up to 3 priority markets to focus on'}
                   >
-                    <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {targetMarketOptions.map((market) => {
-                          const selected = leadData.step1.targetMarkets.includes(market)
-                          return (
-                            <SelectionChip
-                              key={market}
-                              selected={selected}
-                              onClick={() => toggleExclusiveMultiSelect('targetMarkets', market, 3, '__none__')}
-                            >
-                              {market}
-                            </SelectionChip>
-                          )
-                        })}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {targetMarketOptions.map((market) => {
+                        const selected = leadData.step1.targetMarkets.includes(market)
+                        return (
+                          <SelectionChip
+                            key={market}
+                            selected={selected}
+                            onClick={() => toggleExclusiveMultiSelect('targetMarkets', market, 3, '__none__')}
+                          >
+                            {market}
+                          </SelectionChip>
+                        )
+                      })}
                     </div>
                     {step1Submitted && targetMarketsError && <p className="mt-2 text-xs text-clay">{targetMarketsError}</p>}
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
                   </SectionCard>
 
                   <SectionCard
@@ -1244,51 +1238,47 @@ function App() {
                         ? '这一部分会直接影响 AI 的客户定位和卖点提炼。'
                         : 'This section directly shapes AI customer targeting and positioning.'}
                   >
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field
                     label={isZh ? '您更想开发哪类客户？' : 'Target Customer Types'}
                     hint={isZh ? '最多选择 3 项，AI 会根据客户类型推荐更适合的销售路径' : 'Choose up to 3 customer types to shape the route-to-market advice'}
                   >
-                    <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {targetCustomerOptions.map((customer) => {
-                          const selected = leadData.step1.targetCustomers.includes(customer)
-                          return (
-                            <SelectionChip
-                              key={customer}
-                              selected={selected}
-                              onClick={() => toggleExclusiveMultiSelect('targetCustomers', customer, 3, '暂不明确')}
-                            >
-                              {customer}
-                            </SelectionChip>
-                          )
-                        })}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {targetCustomerOptions.map((customer) => {
+                        const selected = leadData.step1.targetCustomers.includes(customer)
+                        return (
+                          <SelectionChip
+                            key={customer}
+                            selected={selected}
+                            onClick={() => toggleExclusiveMultiSelect('targetCustomers', customer, 3, '暂不明确')}
+                          >
+                            {customer}
+                          </SelectionChip>
+                        )
+                      })}
                     </div>
                     {step1Submitted && targetCustomersError && <p className="mt-2 text-xs text-clay">{targetCustomersError}</p>}
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
 
-                  <QuestionCard>
+                  <QuestionBlock>
                   <Field
                     label={isZh ? '您觉得自己的核心竞争优势是？' : 'Core Competitive Advantages'}
                     hint={isZh ? '最多选择 3 项，AI 会据此提炼您的出海定位和核心卖点' : 'Choose up to 3 strengths so AI can sharpen your positioning'}
                   >
-                    <div className="rounded-2xl border border-black/8 bg-white/85 p-3.5 sm:p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {coreAdvantageOptions.map((advantage) => {
-                          const selected = leadData.step1.coreAdvantages.includes(advantage)
-                          return (
-                            <SelectionChip
-                              key={advantage}
-                              selected={selected}
-                              onClick={() => toggleExclusiveMultiSelect('coreAdvantages', advantage, 3, '__none__')}
-                            >
-                              {advantage}
-                            </SelectionChip>
-                          )
-                        })}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {coreAdvantageOptions.map((advantage) => {
+                        const selected = leadData.step1.coreAdvantages.includes(advantage)
+                        return (
+                          <SelectionChip
+                            key={advantage}
+                            selected={selected}
+                            onClick={() => toggleExclusiveMultiSelect('coreAdvantages', advantage, 3, '__none__')}
+                          >
+                            {advantage}
+                          </SelectionChip>
+                        )
+                      })}
                     </div>
                     {leadData.step1.coreAdvantages.includes('其他') && (
                       <div className="mt-3">
@@ -1310,7 +1300,7 @@ function App() {
                     )}
                     {step1Submitted && coreAdvantagesError && <p className="mt-2 text-xs text-clay">{coreAdvantagesError}</p>}
                   </Field>
-                  </QuestionCard>
+                  </QuestionBlock>
                   </SectionCard>
               </div>
 
@@ -2101,20 +2091,20 @@ function Field({ label, hint, children }) {
   )
 }
 
-function QuestionCard({ children }) {
-  return <div className="rounded-2xl border border-black/8 bg-white/72 p-4 sm:p-5">{children}</div>
-}
-
 function SectionCard({ title, description, children }) {
   return (
-    <div className="rounded-2xl border border-black/8 bg-sand/35 p-4 shadow-[0_1px_0_rgba(0,0,0,0.02)] sm:p-5">
-      <div className="mb-4 border-b border-black/6 pb-3">
+    <div className="overflow-hidden rounded-2xl border border-black/8 bg-white/65">
+      <div className="bg-sand/70 px-4 py-3 sm:px-5">
         <p className="text-sm font-semibold text-ink">{title}</p>
         <p className="mt-1 text-xs leading-relaxed text-black/55">{description}</p>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-4 p-4 sm:p-5">{children}</div>
     </div>
   )
+}
+
+function QuestionBlock({ children }) {
+  return <div className="border-t border-black/8 pt-4 first:border-t-0 first:pt-0">{children}</div>
 }
 
 function SelectionChip({ selected, onClick, children }) {
