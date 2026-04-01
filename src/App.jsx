@@ -91,12 +91,9 @@ const OTHER_TEXT_MAX_LENGTH = 40
 const otherTextAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s/&,+\-.'’()（）]+$/
 const TARGET_MARKET_MAX_LENGTH = 40
 const targetMarketAllowedPattern = /^[\u4e00-\u9fa5A-Za-z\s.'’\-()（）]+$/
-const PRODUCT_LIST_MIN = 3
-const PRODUCT_LIST_MAX = 5
-const PRODUCT_ITEM_MAX_LENGTH = 40
-const productItemAllowedPattern = /^[\u4e00-\u9fa5A-Za-z0-9\s/&,+\-.'’()（）]+$/
-const PRODUCT_PHOTO_MIN = 2
 const PRODUCT_PHOTO_MAX = 3
+const FACTORY_PHOTO_MAX = 5
+const FACTORY_VIDEO_MAX = 2
 
 const getCostData = (market = '') => {
   const key = market.trim().toLowerCase()
@@ -259,66 +256,6 @@ const validateTargetMarket = (value, isZh) => {
   return ''
 }
 
-const getFilledProductItems = (items = []) => items.map((item) => item.trim()).filter(Boolean)
-const getFilledProductEntries = (items = [], photos = []) =>
-  items
-    .map((name, index) => ({
-      index,
-      name: name.trim(),
-      photos: photos[index] || [],
-    }))
-    .filter((item) => item.name)
-
-const validateProductItems = (items, isZh) => {
-  const filledItems = getFilledProductItems(items)
-  if (filledItems.length < PRODUCT_LIST_MIN) {
-    return {
-      error: isZh
-        ? `请至少填写 ${PRODUCT_LIST_MIN} 个产品。`
-        : `Please provide at least ${PRODUCT_LIST_MIN} products.`,
-      items: filledItems,
-    }
-  }
-
-  if (filledItems.length > PRODUCT_LIST_MAX) {
-    return {
-      error: isZh
-        ? `最多填写 ${PRODUCT_LIST_MAX} 个产品。`
-        : `Please provide no more than ${PRODUCT_LIST_MAX} products.`,
-      items: filledItems,
-    }
-  }
-
-  const invalidItem = filledItems.find(
-    (item) => item.length < 2 || item.length > PRODUCT_ITEM_MAX_LENGTH || !productItemAllowedPattern.test(item),
-  )
-  if (invalidItem) {
-    return {
-      error: isZh
-        ? `每个产品需 2-${PRODUCT_ITEM_MAX_LENGTH} 字，且仅支持中英文、数字和常见符号。`
-        : `Each product must be 2-${PRODUCT_ITEM_MAX_LENGTH} chars and use letters/numbers/common symbols.`,
-      items: filledItems,
-    }
-  }
-
-  return { error: '', items: filledItems }
-}
-
-const validateProductPhotos = (productItems, productPhotos, isZh) => {
-  const entries = getFilledProductEntries(productItems, productPhotos)
-  const invalidEntry = entries.find(
-    (entry) => entry.photos.length < PRODUCT_PHOTO_MIN || entry.photos.length > PRODUCT_PHOTO_MAX,
-  )
-
-  if (invalidEntry) {
-    const productName = invalidEntry.name || (isZh ? `产品 ${invalidEntry.index + 1}` : `Product ${invalidEntry.index + 1}`)
-    return isZh
-      ? `「${productName}」需上传 ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张照片。`
-      : `"${productName}" requires ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} photos.`
-  }
-
-  return ''
-}
 
 const getCategoryItems = (value = '') =>
   value
@@ -361,7 +298,6 @@ const getEntryDifficulty = (market, isZh) => {
   return map[key] || (isZh ? '中等，建议进一步核实 HS 编码和渠道要求' : 'Medium, validate HS code and channel requirements')
 }
 
-const getFilledPhotoGroups = (photos = []) => photos.filter((group) => group.length >= PRODUCT_PHOTO_MIN).length
 
 const usWebsiteCopy = {
   heroEyebrow: 'ONE-PAGE WEBSITE PREVIEW',
@@ -408,9 +344,7 @@ function App() {
   const [coreAdvantageOtherDraft, setCoreAdvantageOtherDraft] = useState('')
   const [targetMarketError, setTargetMarketError] = useState('')
   const [targetMarketTouched, setTargetMarketTouched] = useState(false)
-  const [productListError, setProductListError] = useState('')
-  const [productListTouched, setProductListTouched] = useState(false)
-  const [productPhotoError, setProductPhotoError] = useState('')
+  const [productNameError, setProductNameError] = useState('')
   const [actionError, setActionError] = useState('')
   const [websiteGenerated, setWebsiteGenerated] = useState(false)
   const [onePagerGenerated, setOnePagerGenerated] = useState(false)
@@ -440,8 +374,11 @@ function App() {
       targetMarket: '',
     },
     step5: {
-      productItems: ['', '', ''],
-      productPhotos: [[], [], []],
+      productName: '',
+      productInfo: ['', '', ''],
+      productPhotos: [],
+      factoryPhotos: [],
+      factoryVideos: [],
     },
   })
 
@@ -706,91 +643,78 @@ function App() {
     setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
   }
 
-  const handleProductItemChange = (index, value) => {
+  const handleProductNameChange = (value) => {
+    setLeadData((prev) => ({ ...prev, step5: { ...prev.step5, productName: value } }))
+    if (value.trim()) setProductNameError('')
+  }
+
+  const handleProductInfoChange = (index, value) => {
     setLeadData((prev) => ({
       ...prev,
       step5: {
         ...prev.step5,
-        productItems: prev.step5.productItems.map((item, itemIndex) => (itemIndex === index ? value : item)),
+        productInfo: prev.step5.productInfo.map((item, i) => (i === index ? value : item)),
       },
     }))
-
-    if (productListTouched) {
-      setProductListError(validateProductItems(leadData.step5.productItems.map((item, itemIndex) => (itemIndex === index ? value : item)), isZh).error)
-    }
   }
 
-  const handleProductItemBlur = () => {
-    setProductListTouched(true)
-    setProductListError(validateProductItems(leadData.step5.productItems, isZh).error)
-  }
-
-  const addProductItem = () => {
-    setLeadData((prev) => {
-      if (prev.step5.productItems.length >= PRODUCT_LIST_MAX) {
-        return prev
-      }
-      return {
-        ...prev,
-        step5: {
-          ...prev.step5,
-          productItems: [...prev.step5.productItems, ''],
-          productPhotos: [...prev.step5.productPhotos, []],
-        },
-      }
-    })
-  }
-
-  const removeProductItem = (index) => {
-    setLeadData((prev) => {
-      if (prev.step5.productItems.length <= PRODUCT_LIST_MIN) {
-        return prev
-      }
-      const nextItems = prev.step5.productItems.filter((_, itemIndex) => itemIndex !== index)
-      const nextPhotos = prev.step5.productPhotos.filter((_, itemIndex) => itemIndex !== index)
-      return {
-        ...prev,
-        step5: {
-          ...prev.step5,
-          productItems: nextItems,
-          productPhotos: nextPhotos,
-        },
-      }
-    })
-  }
-
-  const handleProductPhotoUpload = (productIndex, event) => {
+  const handleStep5PhotoUpload = (event) => {
     const pickedFiles = Array.from(event.target.files || [])
     const imageFiles = pickedFiles.filter((file) => file.type.startsWith('image/'))
-    const files = imageFiles.slice(0, PRODUCT_PHOTO_MAX)
-
-    const previews = files.map((file) => ({
+    const remaining = PRODUCT_PHOTO_MAX - leadData.step5.productPhotos.length
+    const toAdd = imageFiles.slice(0, remaining).map((file) => ({
       name: file.name,
       file,
       url: URL.createObjectURL(file),
     }))
+    setLeadData((prev) => ({
+      ...prev,
+      step5: { ...prev.step5, productPhotos: [...prev.step5.productPhotos, ...toAdd] },
+    }))
+  }
 
+  const removeStep5Photo = (index) => {
     setLeadData((prev) => ({
       ...prev,
       step5: {
         ...prev.step5,
-        productPhotos: prev.step5.productPhotos.map((photos, index) => (index === productIndex ? previews : photos)),
+        productPhotos: prev.step5.productPhotos.filter((_, i) => i !== index),
       },
     }))
+  }
 
-    if (pickedFiles.length > 0 && imageFiles.length === 0) {
-      setProductPhotoError(isZh ? '产品照片仅支持图片文件。' : 'Product photos only support image files.')
-      return
-    }
-    if (imageFiles.length > PRODUCT_PHOTO_MAX) {
-      setProductPhotoError(
-        isZh
-          ? `单个产品最多上传 ${PRODUCT_PHOTO_MAX} 张照片，已保留前 ${PRODUCT_PHOTO_MAX} 张。`
-          : `Each product supports up to ${PRODUCT_PHOTO_MAX} photos. Kept the first ${PRODUCT_PHOTO_MAX}.`,
-      )
-      return
-    }
-    setProductPhotoError('')
+  const handleFactoryPhotoUpload = (event) => {
+    const files = Array.from(event.target.files || []).filter((f) => f.type.startsWith('image/'))
+    const remaining = FACTORY_PHOTO_MAX - leadData.step5.factoryPhotos.length
+    const toAdd = files.slice(0, remaining).map((file) => ({ name: file.name, file, url: URL.createObjectURL(file) }))
+    setLeadData((prev) => ({
+      ...prev,
+      step5: { ...prev.step5, factoryPhotos: [...prev.step5.factoryPhotos, ...toAdd] },
+    }))
+  }
+
+  const removeFactoryPhoto = (index) => {
+    setLeadData((prev) => ({
+      ...prev,
+      step5: { ...prev.step5, factoryPhotos: prev.step5.factoryPhotos.filter((_, i) => i !== index) },
+    }))
+  }
+
+  const handleFactoryVideoUpload = (event) => {
+    const files = Array.from(event.target.files || []).filter((f) => f.type.startsWith('video/'))
+    const remaining = FACTORY_VIDEO_MAX - leadData.step5.factoryVideos.length
+    const toAdd = files.slice(0, remaining).map((file) => ({ name: file.name, file, url: URL.createObjectURL(file) }))
+    setLeadData((prev) => ({
+      ...prev,
+      step5: { ...prev.step5, factoryVideos: [...prev.step5.factoryVideos, ...toAdd] },
+    }))
+  }
+
+  const removeFactoryVideo = (index) => {
+    setLeadData((prev) => ({
+      ...prev,
+      step5: { ...prev.step5, factoryVideos: prev.step5.factoryVideos.filter((_, i) => i !== index) },
+    }))
   }
 
   useEffect(() => {
@@ -896,13 +820,6 @@ function App() {
     }
     setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
   }, [isZh, leadData.step3.targetMarket, selectedPath, targetMarketTouched])
-
-  useEffect(() => {
-    if (!productListTouched) {
-      return
-    }
-    setProductListError(validateProductItems(leadData.step5.productItems, isZh).error)
-  }, [isZh, leadData.step5.productItems, productListTouched])
 
   const toggleCertification = (cert) => {
     setLeadData((prev) => {
@@ -1137,27 +1054,17 @@ function App() {
   const topMarket = ai?.topMarkets?.[0]
   const backupMarkets = ai?.topMarkets?.slice(1) || []
   const categoryItems = getCategoryItems(leadData.step1.productCategory)
-  const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
-  const parsedProducts = getFilledProductItems(leadData.step5.productItems)
-  const productEntries = getFilledProductEntries(leadData.step5.productItems, leadData.step5.productPhotos)
-  const filledPhotoGroups = getFilledPhotoGroups(leadData.step5.productPhotos)
+  const primaryImage = leadData.step5.productPhotos[0]?.url
+  const productEntry = leadData.step5.productName.trim()
+    ? { name: leadData.step5.productName.trim(), info: leadData.step5.productInfo, photos: leadData.step5.productPhotos }
+    : null
 
   const validateStep5Inputs = () => {
-    const productValidation = validateProductItems(leadData.step5.productItems, isZh)
-    if (productValidation.error) {
-      setProductListTouched(true)
-      setProductListError(productValidation.error)
+    if (!leadData.step5.productName.trim()) {
+      setProductNameError(isZh ? '请填写产品名称。' : 'Please enter a product name.')
       return false
     }
-
-    const productPhotoValidation = validateProductPhotos(leadData.step5.productItems, leadData.step5.productPhotos, isZh)
-    if (productPhotoValidation) {
-      setProductPhotoError(productPhotoValidation)
-      return false
-    }
-
-    setProductListError('')
-    setProductPhotoError('')
+    setProductNameError('')
     return true
   }
 
@@ -2064,105 +1971,153 @@ function App() {
           })()}
 
           {step === 5 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl">{isZh ? '第 5 步：智能物料生成' : 'Step 5. Smart Material Generation'}</h2>
-              <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
-                <p className="text-sm text-black/70">
-                  {isZh
-                    ? '先补齐主推产品和照片，再生成网站预览或 One-pager。手机端建议一条产品一条产品地完成。'
-                    : 'Complete products and photos first, then generate the website preview or one-pager. On mobile, finish one product at a time.'}
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                  <MiniMetric label={isZh ? '已填产品' : 'Products'} value={`${parsedProducts.length}/${PRODUCT_LIST_MAX}`} />
-                  <MiniMetric label={isZh ? '已补照片产品' : 'Photo-ready'} value={`${filledPhotoGroups}/${PRODUCT_LIST_MAX}`} />
+            <div className="space-y-5">
+              <h2 className="text-2xl">{isZh ? '第 5 步：物料生成' : 'Step 5. Material Generation'}</h2>
+
+              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      {isZh ? '产品名称' : 'Product Name'}
+                      <span className="ml-1 text-clay">*</span>
+                    </label>
+                    <input
+                      value={leadData.step5.productName}
+                      onChange={(e) => handleProductNameChange(e.target.value)}
+                      className={`mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring ${productNameError ? 'border-clay/60 bg-clay/5' : 'border-black/15'}`}
+                      placeholder={isZh ? '例如：竹纤维面巾纸' : 'e.g. Bamboo facial tissue'}
+                    />
+                    {productNameError && <p className="mt-1 text-xs text-clay">{productNameError}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      {isZh ? '产品信息（3 条卖点或特点）' : 'Product Info (3 key points)'}
+                    </label>
+                    <div className="mt-1.5 space-y-2">
+                      {leadData.step5.productInfo.map((info, index) => (
+                        <input
+                          key={index}
+                          value={info}
+                          onChange={(e) => handleProductInfoChange(index, e.target.value)}
+                          className="w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                          placeholder={isZh
+                            ? ['例如：支持 OEM / 私标定制', '例如：交期 25-35 天', '例如：CE、FDA 认证齐全'][index]
+                            : ['e.g. OEM / private label available', 'e.g. Lead time 25-35 days', 'e.g. CE & FDA certified'][index]}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      {isZh ? `产品照片（最多 ${PRODUCT_PHOTO_MAX} 张）` : `Product Photos (up to ${PRODUCT_PHOTO_MAX})`}
+                    </label>
+                    {leadData.step5.productPhotos.length > 0 && (
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {leadData.step5.productPhotos.map((photo, index) => (
+                          <div key={`${photo.name}-${index}`} className="relative">
+                            <img
+                              src={photo.url}
+                              alt={photo.name}
+                              className="h-24 w-full rounded-xl border border-black/10 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeStep5Photo(index)}
+                              className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"
+                              aria-label={isZh ? '删除照片' : 'Remove photo'}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {leadData.step5.productPhotos.length < PRODUCT_PHOTO_MAX && (
+                      <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-sand/50 px-3 py-2.5 text-xs font-semibold text-black/70">
+                        <Upload className="h-3.5 w-3.5" />
+                        {isZh ? '上传照片' : 'Upload Photos'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleStep5PhotoUpload}
+                        />
+                      </label>
+                    )}
+                    <span className="ml-2 text-xs text-black/40">
+                      {leadData.step5.productPhotos.length}/{PRODUCT_PHOTO_MAX}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-4">
-                <label className="mb-2 block text-sm font-medium">
-                  {isZh ? `主推产品清单（必填 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个）` : `Key Product List (Required: ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX})`}
-                </label>
-                <div className="space-y-2">
-                  {leadData.step5.productItems.map((item, index) => (
-                    <div key={`product-${index}`} className="rounded-xl border border-black/10 bg-sand/55 p-3">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-ink">{isZh ? `产品 ${index + 1}` : `Product ${index + 1}`}</p>
-                        <span className="text-xs text-black/50">
-                          {(leadData.step5.productPhotos[index] || []).length >= PRODUCT_PHOTO_MIN
-                            ? isZh ? '已可生成' : 'Ready'
-                            : isZh ? '待补照片' : 'Photos needed'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          value={item}
-                          onChange={(e) => handleProductItemChange(index, e.target.value)}
-                          onBlur={handleProductItemBlur}
-                          className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
-                          placeholder={isZh ? `产品 ${index + 1}，例如：竹纤维面巾纸` : `Product ${index + 1}, e.g. Bamboo facial tissue`}
-                        />
-                        {leadData.step5.productItems.length > PRODUCT_LIST_MIN && (
-                          <button
-                            type="button"
-                            onClick={() => removeProductItem(index)}
-                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/15 text-black/65"
-                            aria-label={isZh ? '删除产品' : 'Remove product'}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-3 py-3 text-xs font-semibold text-black/75 sm:w-auto">
-                          <Upload className="h-3.5 w-3.5" />
-                          {isZh ? `上传该产品照片（${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张）` : `Upload photos for this product (${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX})`}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => handleProductPhotoUpload(index, e)}
-                          />
-                        </label>
-                        <span className="mt-2 block text-xs text-black/50 sm:ml-2 sm:mt-0 sm:inline">
-                          {(leadData.step5.productPhotos[index] || []).length}/{PRODUCT_PHOTO_MAX}
-                        </span>
-                        {(leadData.step5.productPhotos[index] || []).length > 0 && (
-                          <div className="mt-2 grid grid-cols-3 gap-2">
-                            {leadData.step5.productPhotos[index].map((photo) => (
-                              <img
-                                key={`${photo.name}-${photo.url}`}
-                                src={photo.url}
-                                alt={photo.name}
-                                className="h-16 w-full rounded-md border border-black/10 object-cover"
-                              />
-                            ))}
+              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      {isZh ? `工厂照片（最多 ${FACTORY_PHOTO_MAX} 张）` : `Factory Photos (up to ${FACTORY_PHOTO_MAX})`}
+                    </label>
+                    {leadData.step5.factoryPhotos.length > 0 && (
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {leadData.step5.factoryPhotos.map((photo, index) => (
+                          <div key={`fp-${index}`} className="relative">
+                            <img src={photo.url} alt={photo.name} className="h-24 w-full rounded-xl border border-black/10 object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeFactoryPhoto(index)}
+                              className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"
+                              aria-label={isZh ? '删除照片' : 'Remove photo'}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={addProductItem}
-                  disabled={leadData.step5.productItems.length >= PRODUCT_LIST_MAX}
-                  className="mt-3 inline-flex items-center gap-2 rounded-xl border border-black/15 bg-white px-3 py-2 text-xs font-semibold text-black/70 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {isZh ? '新增一条产品' : 'Add Product Item'}
-                </button>
-                <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-xs">
-                  <span className={productListError || productPhotoError ? 'text-clay' : 'text-black/50'}>
-                    {productListError ||
-                      productPhotoError ||
-                      (isZh
-                        ? `请填写 ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} 个主推产品，每个产品上传 ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} 张照片`
-                        : `Provide ${PRODUCT_LIST_MIN}-${PRODUCT_LIST_MAX} key products and upload ${PRODUCT_PHOTO_MIN}-${PRODUCT_PHOTO_MAX} photos for each`)}
-                  </span>
-                  <span className="text-black/45">
-                    {parsedProducts.length}/{PRODUCT_LIST_MAX}
-                  </span>
+                    )}
+                    {leadData.step5.factoryPhotos.length < FACTORY_PHOTO_MAX && (
+                      <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-sand/50 px-3 py-2.5 text-xs font-semibold text-black/70">
+                        <Upload className="h-3.5 w-3.5" />
+                        {isZh ? '上传照片' : 'Upload Photos'}
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleFactoryPhotoUpload} />
+                      </label>
+                    )}
+                    <span className="ml-2 text-xs text-black/40">{leadData.step5.factoryPhotos.length}/{FACTORY_PHOTO_MAX}</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-ink">
+                      {isZh ? `工厂视频（最多 ${FACTORY_VIDEO_MAX} 段）` : `Factory Videos (up to ${FACTORY_VIDEO_MAX})`}
+                    </label>
+                    {leadData.step5.factoryVideos.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {leadData.step5.factoryVideos.map((video, index) => (
+                          <div key={`fv-${index}`} className="relative rounded-xl border border-black/10 overflow-hidden">
+                            <video src={video.url} controls className="w-full rounded-xl" style={{ maxHeight: '200px' }} />
+                            <button
+                              type="button"
+                              onClick={() => removeFactoryVideo(index)}
+                              className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white"
+                              aria-label={isZh ? '删除视频' : 'Remove video'}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                            <p className="px-3 py-1.5 text-xs text-black/50 truncate">{video.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {leadData.step5.factoryVideos.length < FACTORY_VIDEO_MAX && (
+                      <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-sand/50 px-3 py-2.5 text-xs font-semibold text-black/70">
+                        <Upload className="h-3.5 w-3.5" />
+                        {isZh ? '上传视频' : 'Upload Video'}
+                        <input type="file" accept="video/*" multiple className="hidden" onChange={handleFactoryVideoUpload} />
+                      </label>
+                    )}
+                    <span className="ml-2 text-xs text-black/40">{leadData.step5.factoryVideos.length}/{FACTORY_VIDEO_MAX}</span>
+                  </div>
                 </div>
               </div>
 
@@ -2238,11 +2193,9 @@ function App() {
                         ))}
                       </ul>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.15em] text-black/55">Key Products</p>
+                        <p className="text-xs uppercase tracking-[0.15em] text-black/55">Key Product</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {parsedProducts.length > 0
-                            ? parsedProducts.slice(0, PRODUCT_LIST_MAX).map((item) => <Tag key={item}>{item}</Tag>)
-                            : <Tag>Please add 3-5 products</Tag>}
+                          {productEntry ? <Tag>{productEntry.name}</Tag> : <Tag>Please add a product</Tag>}
                         </div>
                       </div>
                     </div>
@@ -2314,14 +2267,20 @@ function App() {
                       <MiniMetric label={isZh ? '工厂规模' : 'Factory Scale'} value={leadData.step1.currentCapacity || (isZh ? '待定' : 'TBD')} />
                     </div>
                     <div className="mt-4">
-                      <p className="text-xs uppercase tracking-[0.15em] text-black/55">{isZh ? '主推产品' : 'Key Products'}</p>
-                      <p className="mt-1 text-sm text-black/75">
-                        {parsedProducts.length > 0
-                          ? parsedProducts.slice(0, PRODUCT_LIST_MAX).join(' / ')
-                          : isZh
-                            ? '待填写（请在上方填写 3-5 个产品）'
-                            : 'Pending (please provide 3-5 products above)'}
+                      <p className="text-xs uppercase tracking-[0.15em] text-black/55">{isZh ? '主推产品' : 'Key Product'}</p>
+                      <p className="mt-1 text-sm font-medium text-ink">
+                        {productEntry?.name || (isZh ? '待填写' : 'Pending')}
                       </p>
+                      {productEntry && productEntry.info.some(Boolean) && (
+                        <ul className="mt-1.5 space-y-0.5 text-sm text-black/65">
+                          {productEntry.info.filter(Boolean).map((point, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-moss" />
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2375,40 +2334,37 @@ function App() {
 
             <section className="us-web-section">
               <p className="us-web-subheading text-black/85">{usWebsiteCopy.productTitle}</p>
-              <div className="mt-4 space-y-3">
-                {productEntries.map((entry) => (
-                  <article
-                    key={`${entry.index}-${entry.name}`}
-                    className="rounded-2xl border border-black/10 bg-white px-4 py-4 md:px-5 md:py-5"
-                  >
+              <div className="mt-4">
+                {productEntry ? (
+                  <article className="rounded-2xl border border-black/10 bg-white px-4 py-4 md:px-5 md:py-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 md:max-w-[46%]">
-                        <div className="flex items-center gap-3">
-                          <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-ink px-2 text-xs font-semibold text-white">
-                            {String(entry.index + 1).padStart(2, '0')}
-                          </span>
-                          <h4 className="us-web-subheading truncate">{entry.name}</h4>
+                        <h4 className="us-web-subheading">{productEntry.name}</h4>
+                        {productEntry.info.some(Boolean) && (
+                          <ul className="mt-3 space-y-1.5 text-sm text-black/70">
+                            {productEntry.info.filter(Boolean).map((point, i) => (
+                              <li key={i}>{point}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      {productEntry.photos.length > 0 && (
+                        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 md:max-w-[50%]">
+                          {productEntry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
+                            <img
+                              key={photo.url}
+                              src={photo.url}
+                              alt={photo.name}
+                              className="h-24 w-full rounded-lg border border-black/10 object-cover md:h-28"
+                            />
+                          ))}
                         </div>
-                        <ul className="mt-3 space-y-1.5 text-sm text-black/70">
-                          <li>MOQ: 1 x 20ft container</li>
-                          <li>Lead time: 25-35 days</li>
-                          <li>Customization: OEM / private label</li>
-                        </ul>
-                      </div>
-
-                      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 md:max-w-[50%]">
-                        {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
-                          <img
-                            key={`${entry.name}-${photo.url}`}
-                            src={photo.url}
-                            alt={`${entry.name}-${photo.name}`}
-                            className="h-24 w-full rounded-lg border border-black/10 object-cover md:h-28"
-                          />
-                        ))}
-                      </div>
+                      )}
                     </div>
                   </article>
-                ))}
+                ) : (
+                  <p className="text-sm text-black/50">{isZh ? '请先填写产品信息。' : 'Please add a product above.'}</p>
+                )}
               </div>
             </section>
 
