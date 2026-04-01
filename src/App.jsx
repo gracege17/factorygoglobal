@@ -353,7 +353,7 @@ function App() {
   const [showDecisionFactors, setShowDecisionFactors] = useState(false)
   const [cargoValue, setCargoValue] = useState('')
   const [showLeadGate, setShowLeadGate] = useState(false)
-  const [leadContact, setLeadContact] = useState({ wechat: '', name: '' })
+  const [leadContact, setLeadContact] = useState({ wechat: '', phone: '', name: '' })
   const [leadContactError, setLeadContactError] = useState('')
   const [pendingAnalysis, setPendingAnalysis] = useState(false)
   const [leadData, setLeadData] = useState({
@@ -2362,6 +2362,16 @@ function App() {
                   placeholder={isZh ? '你的微信号' : 'Your WeChat ID'}
                 />
                 {leadContactError && <p className="mt-1 text-xs text-clay">{leadContactError}</p>}
+              </div>
+              <div>
+                <label className="block text-xs text-black/55">{isZh ? '手机号（选填）' : 'Phone (optional)'}</label>
+                <input
+                  type="tel"
+                  value={leadContact.phone}
+                  onChange={(e) => setLeadContact((prev) => ({ ...prev, phone: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                  placeholder={isZh ? '你的手机号' : 'Your phone number'}
+                />
               </div>
               <div>
                 <label className="block text-xs text-black/55">{isZh ? '姓名（选填）' : 'Name (optional)'}</label>
