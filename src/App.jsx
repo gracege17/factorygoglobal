@@ -374,9 +374,11 @@ function App() {
       targetMarket: '',
     },
     step5: {
-      productName: '',
-      productInfo: ['', '', ''],
-      productPhotos: [],
+      products: [
+        { name: '', info: ['', '', ''], photos: [] },
+        { name: '', info: ['', '', ''], photos: [] },
+        { name: '', info: ['', '', ''], photos: [] },
+      ],
       factoryPhotos: [],
       factoryVideos: [],
     },
@@ -643,42 +645,52 @@ function App() {
     setTargetMarketError(validateTargetMarket(leadData.step3.targetMarket, isZh))
   }
 
-  const handleProductNameChange = (value) => {
-    setLeadData((prev) => ({ ...prev, step5: { ...prev.step5, productName: value } }))
-    if (value.trim()) setProductNameError('')
-  }
-
-  const handleProductInfoChange = (index, value) => {
+  const handleProductNameChange = (productIndex, value) => {
     setLeadData((prev) => ({
       ...prev,
       step5: {
         ...prev.step5,
-        productInfo: prev.step5.productInfo.map((item, i) => (i === index ? value : item)),
+        products: prev.step5.products.map((p, i) => i === productIndex ? { ...p, name: value } : p),
+      },
+    }))
+    if (productIndex === 0 && value.trim()) setProductNameError('')
+  }
+
+  const handleProductInfoChange = (productIndex, infoIndex, value) => {
+    setLeadData((prev) => ({
+      ...prev,
+      step5: {
+        ...prev.step5,
+        products: prev.step5.products.map((p, i) =>
+          i === productIndex ? { ...p, info: p.info.map((item, j) => (j === infoIndex ? value : item)) } : p
+        ),
       },
     }))
   }
 
-  const handleStep5PhotoUpload = (event) => {
-    const pickedFiles = Array.from(event.target.files || [])
-    const imageFiles = pickedFiles.filter((file) => file.type.startsWith('image/'))
-    const remaining = PRODUCT_PHOTO_MAX - leadData.step5.productPhotos.length
-    const toAdd = imageFiles.slice(0, remaining).map((file) => ({
-      name: file.name,
-      file,
-      url: URL.createObjectURL(file),
-    }))
-    setLeadData((prev) => ({
-      ...prev,
-      step5: { ...prev.step5, productPhotos: [...prev.step5.productPhotos, ...toAdd] },
-    }))
-  }
-
-  const removeStep5Photo = (index) => {
+  const handleStep5PhotoUpload = (productIndex, event) => {
+    const files = Array.from(event.target.files || []).filter((f) => f.type.startsWith('image/'))
+    const remaining = PRODUCT_PHOTO_MAX - leadData.step5.products[productIndex].photos.length
+    const toAdd = files.slice(0, remaining).map((file) => ({ name: file.name, file, url: URL.createObjectURL(file) }))
     setLeadData((prev) => ({
       ...prev,
       step5: {
         ...prev.step5,
-        productPhotos: prev.step5.productPhotos.filter((_, i) => i !== index),
+        products: prev.step5.products.map((p, i) =>
+          i === productIndex ? { ...p, photos: [...p.photos, ...toAdd] } : p
+        ),
+      },
+    }))
+  }
+
+  const removeStep5Photo = (productIndex, photoIndex) => {
+    setLeadData((prev) => ({
+      ...prev,
+      step5: {
+        ...prev.step5,
+        products: prev.step5.products.map((p, i) =>
+          i === productIndex ? { ...p, photos: p.photos.filter((_, j) => j !== photoIndex) } : p
+        ),
       },
     }))
   }
@@ -1002,18 +1014,6 @@ function App() {
       return
     }
 
-    const productValidation = validateProductItems(leadData.step5.productItems, isZh)
-    if (productValidation.error) {
-      setProductListTouched(true)
-      setProductListError(productValidation.error)
-      return
-    }
-    const productPhotoValidation = validateProductPhotos(leadData.step5.productItems, leadData.step5.productPhotos, isZh)
-    if (productPhotoValidation) {
-      setProductPhotoError(productPhotoValidation)
-      return
-    }
-
     setActionError('')
     setPdfError('')
     setDownloadingPdf(true)
@@ -1054,14 +1054,12 @@ function App() {
   const topMarket = ai?.topMarkets?.[0]
   const backupMarkets = ai?.topMarkets?.slice(1) || []
   const categoryItems = getCategoryItems(leadData.step1.productCategory)
-  const primaryImage = leadData.step5.productPhotos[0]?.url
-  const productEntry = leadData.step5.productName.trim()
-    ? { name: leadData.step5.productName.trim(), info: leadData.step5.productInfo, photos: leadData.step5.productPhotos }
-    : null
+  const primaryImage = leadData.step5.products[0]?.photos[0]?.url
+  const productEntries = leadData.step5.products.filter((p) => p.name.trim())
 
   const validateStep5Inputs = () => {
-    if (!leadData.step5.productName.trim()) {
-      setProductNameError(isZh ? '请填写产品名称。' : 'Please enter a product name.')
+    if (!leadData.step5.products[0].name.trim()) {
+      setProductNameError(isZh ? '请至少填写第 1 个产品名称。' : 'Please enter at least the first product name.')
       return false
     }
     setProductNameError('')
@@ -1974,85 +1972,75 @@ function App() {
             <div className="space-y-5">
               <h2 className="text-2xl">{isZh ? '第 5 步：物料生成' : 'Step 5. Material Generation'}</h2>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-ink">
-                      {isZh ? '产品名称' : 'Product Name'}
-                      <span className="ml-1 text-clay">*</span>
-                    </label>
-                    <input
-                      value={leadData.step5.productName}
-                      onChange={(e) => handleProductNameChange(e.target.value)}
-                      className={`mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring ${productNameError ? 'border-clay/60 bg-clay/5' : 'border-black/15'}`}
-                      placeholder={isZh ? '例如：竹纤维面巾纸' : 'e.g. Bamboo facial tissue'}
-                    />
-                    {productNameError && <p className="mt-1 text-xs text-clay">{productNameError}</p>}
-                  </div>
+              {productNameError && <p className="text-xs text-clay">{productNameError}</p>}
 
-                  <div>
-                    <label className="block text-sm font-medium text-ink">
-                      {isZh ? '产品信息（3 条卖点或特点）' : 'Product Info (3 key points)'}
-                    </label>
-                    <div className="mt-1.5 space-y-2">
-                      {leadData.step5.productInfo.map((info, index) => (
-                        <input
-                          key={index}
-                          value={info}
-                          onChange={(e) => handleProductInfoChange(index, e.target.value)}
-                          className="w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
-                          placeholder={isZh
-                            ? ['例如：主要材质或核心原料', '例如：产品核心功能或差异化卖点', '例如：适用场景或目标用途'][index]
-                            : ['e.g. Main material or ingredient', 'e.g. Key feature or differentiator', 'e.g. Use case or target application'][index]}
-                        />
-                      ))}
+              {leadData.step5.products.map((product, productIndex) => (
+                <div key={productIndex} className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                  <p className="mb-3 text-sm font-semibold text-ink">
+                    {isZh ? `产品 ${productIndex + 1}` : `Product ${productIndex + 1}`}
+                    {productIndex === 0 && <span className="ml-1 text-clay">*</span>}
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs text-black/55">{isZh ? '产品名称' : 'Product Name'}</label>
+                      <input
+                        value={product.name}
+                        onChange={(e) => handleProductNameChange(productIndex, e.target.value)}
+                        className={`mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring ${productIndex === 0 && productNameError ? 'border-clay/60 bg-clay/5' : 'border-black/15'}`}
+                        placeholder={isZh ? '例如：竹纤维面巾纸' : 'e.g. Bamboo facial tissue'}
+                      />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-ink">
-                      {isZh ? `产品照片（最多 ${PRODUCT_PHOTO_MAX} 张）` : `Product Photos (up to ${PRODUCT_PHOTO_MAX})`}
-                    </label>
-                    {leadData.step5.productPhotos.length > 0 && (
-                      <div className="mt-2 grid grid-cols-3 gap-2">
-                        {leadData.step5.productPhotos.map((photo, index) => (
-                          <div key={`${photo.name}-${index}`} className="relative">
-                            <img
-                              src={photo.url}
-                              alt={photo.name}
-                              className="h-24 w-full rounded-xl border border-black/10 object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeStep5Photo(index)}
-                              className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"
-                              aria-label={isZh ? '删除照片' : 'Remove photo'}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
+                    <div>
+                      <label className="block text-xs text-black/55">{isZh ? '产品信息（3 条）' : 'Product Info (3 points)'}</label>
+                      <div className="mt-1.5 space-y-2">
+                        {product.info.map((info, infoIndex) => (
+                          <input
+                            key={infoIndex}
+                            value={info}
+                            onChange={(e) => handleProductInfoChange(productIndex, infoIndex, e.target.value)}
+                            className="w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                            placeholder={isZh
+                              ? ['例如：主要材质或核心原料', '例如：产品核心功能或差异化卖点', '例如：适用场景或目标用途'][infoIndex]
+                              : ['e.g. Main material or ingredient', 'e.g. Key feature or differentiator', 'e.g. Use case or target application'][infoIndex]}
+                          />
                         ))}
                       </div>
-                    )}
-                    {leadData.step5.productPhotos.length < PRODUCT_PHOTO_MAX && (
-                      <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-sand/50 px-3 py-2.5 text-xs font-semibold text-black/70">
-                        <Upload className="h-3.5 w-3.5" />
-                        {isZh ? '上传照片' : 'Upload Photos'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={handleStep5PhotoUpload}
-                        />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-black/55">
+                        {isZh ? `产品照片（最多 ${PRODUCT_PHOTO_MAX} 张）` : `Product Photos (up to ${PRODUCT_PHOTO_MAX})`}
                       </label>
-                    )}
-                    <span className="ml-2 text-xs text-black/40">
-                      {leadData.step5.productPhotos.length}/{PRODUCT_PHOTO_MAX}
-                    </span>
+                      {product.photos.length > 0 && (
+                        <div className="mt-2 grid grid-cols-3 gap-2">
+                          {product.photos.map((photo, photoIndex) => (
+                            <div key={`${productIndex}-${photoIndex}`} className="relative">
+                              <img src={photo.url} alt={photo.name} className="h-24 w-full rounded-xl border border-black/10 object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeStep5Photo(productIndex, photoIndex)}
+                                className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"
+                                aria-label={isZh ? '删除照片' : 'Remove photo'}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {product.photos.length < PRODUCT_PHOTO_MAX && (
+                        <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-black/15 bg-sand/50 px-3 py-2.5 text-xs font-semibold text-black/70">
+                          <Upload className="h-3.5 w-3.5" />
+                          {isZh ? '上传照片' : 'Upload Photos'}
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleStep5PhotoUpload(productIndex, e)} />
+                        </label>
+                      )}
+                      <span className="ml-2 text-xs text-black/40">{product.photos.length}/{PRODUCT_PHOTO_MAX}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
 
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
                 <div className="space-y-4">
@@ -2195,7 +2183,9 @@ function App() {
                       <div>
                         <p className="text-xs uppercase tracking-[0.15em] text-black/55">Key Product</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {productEntry ? <Tag>{productEntry.name}</Tag> : <Tag>Please add a product</Tag>}
+                          {productEntries.length > 0
+                            ? productEntries.map((p) => <Tag key={p.name}>{p.name}</Tag>)
+                            : <Tag>Please add a product</Tag>}
                         </div>
                       </div>
                     </div>
@@ -2268,18 +2258,26 @@ function App() {
                     </div>
                     <div className="mt-4">
                       <p className="text-xs uppercase tracking-[0.15em] text-black/55">{isZh ? '主推产品' : 'Key Product'}</p>
-                      <p className="mt-1 text-sm font-medium text-ink">
-                        {productEntry?.name || (isZh ? '待填写' : 'Pending')}
-                      </p>
-                      {productEntry && productEntry.info.some(Boolean) && (
-                        <ul className="mt-1.5 space-y-0.5 text-sm text-black/65">
-                          {productEntry.info.filter(Boolean).map((point, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-moss" />
-                              {point}
-                            </li>
+                      {productEntries.length > 0 ? (
+                        <div className="mt-1 space-y-2">
+                          {productEntries.map((p) => (
+                            <div key={p.name}>
+                              <p className="text-sm font-medium text-ink">{p.name}</p>
+                              {p.info.some(Boolean) && (
+                                <ul className="mt-0.5 space-y-0.5 text-sm text-black/65">
+                                  {p.info.filter(Boolean).map((point, i) => (
+                                    <li key={i} className="flex items-start gap-1.5">
+                                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-moss" />
+                                      {point}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
                           ))}
-                        </ul>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-black/40">{isZh ? '待填写' : 'Pending'}</p>
                       )}
                     </div>
                   </div>
@@ -2334,35 +2332,28 @@ function App() {
 
             <section className="us-web-section">
               <p className="us-web-subheading text-black/85">{usWebsiteCopy.productTitle}</p>
-              <div className="mt-4">
-                {productEntry ? (
-                  <article className="rounded-2xl border border-black/10 bg-white px-4 py-4 md:px-5 md:py-5">
+              <div className="mt-4 space-y-3">
+                {productEntries.length > 0 ? productEntries.map((entry) => (
+                  <article key={entry.name} className="rounded-2xl border border-black/10 bg-white px-4 py-4 md:px-5 md:py-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 md:max-w-[46%]">
-                        <h4 className="us-web-subheading">{productEntry.name}</h4>
-                        {productEntry.info.some(Boolean) && (
+                        <h4 className="us-web-subheading">{entry.name}</h4>
+                        {entry.info.some(Boolean) && (
                           <ul className="mt-3 space-y-1.5 text-sm text-black/70">
-                            {productEntry.info.filter(Boolean).map((point, i) => (
-                              <li key={i}>{point}</li>
-                            ))}
+                            {entry.info.filter(Boolean).map((point, i) => <li key={i}>{point}</li>)}
                           </ul>
                         )}
                       </div>
-                      {productEntry.photos.length > 0 && (
+                      {entry.photos.length > 0 && (
                         <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 md:max-w-[50%]">
-                          {productEntry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
-                            <img
-                              key={photo.url}
-                              src={photo.url}
-                              alt={photo.name}
-                              className="h-24 w-full rounded-lg border border-black/10 object-cover md:h-28"
-                            />
+                          {entry.photos.slice(0, PRODUCT_PHOTO_MAX).map((photo) => (
+                            <img key={photo.url} src={photo.url} alt={photo.name} className="h-24 w-full rounded-lg border border-black/10 object-cover md:h-28" />
                           ))}
                         </div>
                       )}
                     </div>
                   </article>
-                ) : (
+                )) : (
                   <p className="text-sm text-black/50">{isZh ? '请先填写产品信息。' : 'Please add a product above.'}</p>
                 )}
               </div>
