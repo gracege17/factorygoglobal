@@ -1072,6 +1072,10 @@ function App() {
       setLeadContactError(isZh ? '请填写微信号，方便顾问联系你。' : 'Please enter your WeChat ID.')
       return
     }
+    if (leadContact.phone.trim() && !/^\+?\d{6,15}$/.test(leadContact.phone.trim())) {
+      setLeadContactError(isZh ? '手机号格式不正确，请填写纯数字。' : 'Please enter a valid phone number (digits only).')
+      return
+    }
     setLeadContactError('')
     runAnalysis()
   }
@@ -2381,7 +2385,7 @@ function App() {
                 <input
                   type="tel"
                   value={leadContact.phone}
-                  onChange={(e) => setLeadContact((prev) => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => setLeadContact((prev) => ({ ...prev, phone: e.target.value.replace(/[^\d+]/g, '') }))}
                   className="mt-1.5 w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
                   placeholder={isZh ? '你的手机号' : 'Your phone number'}
                 />
