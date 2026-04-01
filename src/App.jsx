@@ -2002,8 +2002,8 @@ function App() {
                           onChange={(e) => handleProductInfoChange(index, e.target.value)}
                           className="w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
                           placeholder={isZh
-                            ? ['例如：支持 OEM / 私标定制', '例如：交期 25-35 天', '例如：CE、FDA 认证齐全'][index]
-                            : ['e.g. OEM / private label available', 'e.g. Lead time 25-35 days', 'e.g. CE & FDA certified'][index]}
+                            ? ['例如：主要材质或核心原料', '例如：产品核心功能或差异化卖点', '例如：适用场景或目标用途'][index]
+                            : ['e.g. Main material or ingredient', 'e.g. Key feature or differentiator', 'e.g. Use case or target application'][index]}
                         />
                       ))}
                     </div>
