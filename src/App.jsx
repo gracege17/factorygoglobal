@@ -1037,9 +1037,22 @@ function App() {
   const runAnalysis = async () => {
     setShowLeadGate(false)
     setAnalysisError('')
+
+    const alreadyUsed = localStorage.getItem('fgg_ai_used') === '1'
+    if (alreadyUsed) {
+      const fallback = createMockAI(leadData.step1, lang)
+      setLeadData((prev) => ({ ...prev, step2: { aiPositioning: fallback } }))
+      setAnalysisError(
+        isZh ? '每个设备仅可生成一次 AI 建议，已展示参考建议。' : 'AI recommendations are limited to one use per device. Showing reference result.',
+      )
+      setStep(2)
+      return
+    }
+
     setAnalyzing(true)
     try {
       const aiPositioning = await fetchAIStrategy(leadData.step1, lang)
+      localStorage.setItem('fgg_ai_used', '1')
       setLeadData((prev) => ({ ...prev, step2: { aiPositioning } }))
       setStep(2)
     } catch {
