@@ -17,7 +17,7 @@ import {
 import { createMockAI, fetchAIStrategy } from './lib/ai'
 
 const steps = [
-  'Basic Info',
+  'Export Readiness',
   'Recommendations',
   'Confirm Direction',
   'Cost Framework',
@@ -407,7 +407,7 @@ function App() {
   const progress = (step / steps.length) * 100
   const isZh = lang === 'zh'
   const stepLabels = isZh
-    ? ['基础信息', '建议结果', '方向确认', '成本框架', '物料生成']
+    ? ['出口准备度测评', '建议结果', '方向确认', '成本框架', '物料生成']
     : steps
 
   useEffect(() => {
@@ -1138,7 +1138,7 @@ function App() {
       <section className="p-1 md:p-2">
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? '第 1 步：基本信息采集' : 'Step 1. Basic Information'}</h2>
+              <h2 className="text-2xl">{isZh ? '第 1 步：出口准备度测评' : 'Step 1. Export Readiness'}</h2>
               <div className="rounded-2xl border border-moss/20 bg-moss/5 p-5">
                 <p className="text-sm text-black/70">
                   {isZh
