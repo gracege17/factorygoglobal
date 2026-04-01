@@ -1,5 +1,8 @@
 export const config = { runtime: 'edge' }
 
+const RATE_LIMIT_MS = 30000 // 同一 IP 30 秒内只能请求一次
+const rateLimitMap = new Map()
+
 const SYSTEM_PROMPT = `You are an expert export strategy advisor helping Chinese manufacturers enter overseas B2B markets.
 
 Given a factory's profile, return a JSON object with market recommendations and positioning advice.
@@ -53,6 +56,18 @@ export default async function handler(req) {
     return new Response('Method not allowed', { status: 405 })
   }
 
+  // Rate limiting per IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
+  const now = Date.now()
+  const lastRequest = rateLimitMap.get(ip) || 0
+  if (now - lastRequest < RATE_LIMIT_MS) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please wait before trying again.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  rateLimitMap.set(ip, now)
+
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'API key not configured' }), {
@@ -82,7 +97,7 @@ export default async function handler(req) {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 800,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildUserPrompt(input, lang) }],
     }),
