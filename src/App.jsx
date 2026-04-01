@@ -21,7 +21,6 @@ const steps = [
   'Recommendations',
   'Confirm Direction',
   'Cost Framework',
-  'Material Output',
 ]
 
 const certOptions = ['ISO 9001', 'CE', 'FSC', 'FDA', 'BSCI', 'SGS / 第三方验厂', 'RoHS', 'REACH', '其他', '暂无']
@@ -407,7 +406,7 @@ function App() {
   const progress = (step / steps.length) * 100
   const isZh = lang === 'zh'
   const stepLabels = isZh
-    ? ['出口准备度测评', '建议结果', '方向确认', '成本框架', '物料生成']
+    ? ['出口准备度测评', '建议结果', '方向确认', '成本框架']
     : steps
 
   useEffect(() => {
@@ -1977,6 +1976,31 @@ function App() {
                 </a>
               </div>
 
+              <div id="advisor-cta" className="rounded-2xl border border-moss/25 bg-moss/5 p-5 sm:p-6">
+                <p className="text-xs uppercase tracking-[0.18em] text-moss/70">{isZh ? '下一步' : 'Next Step'}</p>
+                <h3 className="mt-2 text-xl font-semibold text-ink">
+                  {isZh ? '你已完成出口准备度测评' : 'Export Readiness Assessment Complete'}
+                </h3>
+                <p className="mt-2 text-sm text-black/65">
+                  {isZh
+                    ? '顾问会结合你的测评结果，给出更具体的出海方案建议。扫码或搜索微信号联系我们。'
+                    : 'Our advisor will follow up with tailored recommendations based on your assessment. Add us on WeChat to get started.'}
+                </p>
+                <div className="mt-4 flex items-center gap-4">
+                  <img
+                    src="/wechat-qr.png"
+                    alt="WeChat QR"
+                    className="h-24 w-24 rounded-xl border border-black/10 object-cover"
+                    onError={(e) => { e.target.style.display = 'none' }}
+                  />
+                  <div className="space-y-1 text-sm">
+                    <p className="text-black/55">{isZh ? '微信号：' : 'WeChat ID:'}</p>
+                    <p className="font-semibold text-ink">factorygoglobal</p>
+                    <p className="text-xs text-black/40">{isZh ? '工作日 9:00–18:00 在线' : 'Mon–Fri 9am–6pm'}</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                 <button
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/15 px-4 py-3 text-sm"
@@ -1984,13 +2008,6 @@ function App() {
                 >
                   <ArrowLeft className="h-4 w-4" />
                   {isZh ? '返回' : 'Back'}
-                </button>
-                <button
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
-                  onClick={() => setStep(5)}
-                >
-                  {isZh ? '进入物料生成' : 'Continue to Materials'}
-                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
