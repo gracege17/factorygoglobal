@@ -42,7 +42,7 @@ const goToStep2WithRequiredInputs = async (user, { exportExperience = 'none', cu
 const goToStep5 = async (user) => {
   await goToStep2WithRequiredInputs(user, { exportExperience: 'none' })
   await user.click(screen.getByRole('button', { name: '确认并进入下一步' }))
-  await screen.findByText('第 3 步：客户意向确认')
+  await screen.findByText('第 3 步：确认目标市场')
   await user.click(screen.getByRole('button', { name: '确认市场并继续' }))
   await screen.findByText('第 4 步：出海成本概算')
   await user.click(screen.getByRole('button', { name: '进入物料生成' }))
@@ -158,13 +158,13 @@ describe('App step 1 interactions', () => {
     await goToStep2WithRequiredInputs(user, { exportExperience: 'none' })
     await user.click(screen.getByRole('button', { name: '确认并进入下一步' }))
 
-    expect(await screen.findByText('第 3 步：客户意向确认')).toBeInTheDocument()
+    expect(await screen.findByText('第 3 步：确认目标市场')).toBeInTheDocument()
     await user.click(screen.getByText('手动指定目标市场').closest('button'))
     await user.clear(screen.getByPlaceholderText('例如：加拿大'))
     await user.click(screen.getByRole('button', { name: '确认市场并继续' }))
 
     expect(await screen.findByText('请填写目标国家/市场。')).toBeInTheDocument()
-    expect(screen.getByText('第 3 步：客户意向确认')).toBeInTheDocument()
+    expect(screen.getByText('第 3 步：确认目标市场')).toBeInTheDocument()
   })
 
   test('prevents material generation when step 5 products are incomplete', async () => {

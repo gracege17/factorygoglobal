@@ -1125,6 +1125,7 @@ function App() {
 
   const ai = leadData.step2.aiPositioning
   const topMarket = ai?.topMarkets?.[0]
+  const backupMarkets = ai?.topMarkets?.slice(1) || []
   const categoryItems = getCategoryItems(leadData.step1.productCategory)
   const primaryImage = leadData.step5.productPhotos.flat()[0]?.url
   const parsedProducts = getFilledProductItems(leadData.step5.productItems)
@@ -1651,25 +1652,22 @@ function App() {
                       )}
 
                       <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                        <div className="py-1">
                           <button
                             type="button"
                             onClick={() => setShowDecisionFactors((prev) => !prev)}
                             className="flex w-full items-center justify-between gap-3 text-left"
                           >
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '了解更多' : 'Learn More'}</p>
-                              <p className="mt-1 text-sm font-medium text-ink">
-                                {isZh ? '查看本次建议的判断依据' : 'See what informed this recommendation'}
-                              </p>
-                            </div>
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-lg text-black/55">
+                            <p className="text-xs text-black/50">
+                              {isZh ? '了解更多：查看本次建议的判断依据' : 'Learn more: see what informed this recommendation'}
+                            </p>
+                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-black/10 text-sm text-black/45">
                               {showDecisionFactors ? '−' : '+'}
                             </span>
                           </button>
 
                           {showDecisionFactors && (
-                            <ul className="mt-4 space-y-2 border-t border-black/8 pt-4 text-sm text-black/70">
+                            <ul className="mt-3 space-y-2 border-t border-black/8 pt-3 text-sm text-black/70">
                               <li className="flex items-start gap-2">
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 text-moss" />
                                 <span>
@@ -1714,23 +1712,25 @@ function App() {
                           )}
                         </div>
 
-                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
-                          <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '备选市场' : 'Backup Markets'}</p>
-                          <div className="mt-3 space-y-3">
-                            {ai.topMarkets.slice(1).map((market) => (
-                              <div key={market.country} className="flex items-center justify-between rounded-xl bg-sand px-4 py-3">
-                                <div>
-                                  <p className="font-medium text-ink">{market.country}</p>
-                                  <p className="mt-1 text-xs text-black/55">{getMarketReason(market.country, isZh)}</p>
+                        {backupMarkets.length > 0 && (
+                          <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                            <p className="text-xs uppercase tracking-[0.2em] text-black/55">{isZh ? '备选市场' : 'Backup Markets'}</p>
+                            <div className="mt-3 space-y-3">
+                              {backupMarkets.map((market) => (
+                                <div key={market.country} className="flex items-center justify-between rounded-xl bg-sand px-4 py-3">
+                                  <div>
+                                    <p className="font-medium text-ink">{market.country}</p>
+                                    <p className="mt-1 text-xs text-black/55">{getMarketReason(market.country, isZh)}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-semibold text-moss">{market.fitScore}%</p>
+                                    <p className="text-[11px] text-black/45">{isZh ? '匹配度' : 'Fit'}</p>
+                                  </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-lg font-semibold text-moss">{market.fitScore}%</p>
-                                  <p className="text-[11px] text-black/45">{isZh ? '匹配度' : 'Fit'}</p>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
@@ -1804,10 +1804,10 @@ function App() {
 
           {step === 3 && ai && (
             <div className="space-y-5">
-              <h2 className="text-2xl">{isZh ? '第 3 步：客户意向确认' : 'Step 3. Confirm Target Market'}</h2>
+              <h2 className="text-2xl">{isZh ? '第 3 步：确认目标市场' : 'Step 3. Confirm Target Market'}</h2>
               <p className="text-sm text-black/60">
                 {isZh
-                  ? '先确定首发市场。这个选择会直接影响下一步的成本估算和生成物料内容。'
+                  ? '先确认本次要优先进入的目标市场。这个选择会直接影响下一步的成本估算和生成物料内容。'
                   : 'Choose the launch market first. This will directly shape the cost estimate and generated materials.'}
               </p>
 
