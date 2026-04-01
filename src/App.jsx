@@ -49,34 +49,34 @@ const productCategorySuggestions = ['纸制品', '包装材料', '家具家居',
 
 const costReference = {
   usa: {
-    tariff: '6% - 18%',
-    logistics: 'High',
-    platform: '$3,000 - $10,000 / year',
-    certification: '$6,000 - $25,000',
+    tariff: '6% - 18%', tariffMin: 0.06, tariffMax: 0.18,
+    logistics: 'High', logisticsMin: 0.08, logisticsMax: 0.15,
+    platform: '$3,000 - $10,000 / year', platformMin: 3000, platformMax: 10000,
+    certification: '$6,000 - $25,000', certMin: 6000, certMax: 25000,
   },
   germany: {
-    tariff: '4% - 12%',
-    logistics: 'Medium',
-    platform: '$2,000 - $8,000 / year',
-    certification: '$5,000 - $18,000',
+    tariff: '4% - 12%', tariffMin: 0.04, tariffMax: 0.12,
+    logistics: 'Medium', logisticsMin: 0.05, logisticsMax: 0.10,
+    platform: '$2,000 - $8,000 / year', platformMin: 2000, platformMax: 8000,
+    certification: '$5,000 - $18,000', certMin: 5000, certMax: 18000,
   },
   vietnam: {
-    tariff: '0% - 8%',
-    logistics: 'Low',
-    platform: '$1,000 - $5,000 / year',
-    certification: '$3,000 - $10,000',
+    tariff: '0% - 8%', tariffMin: 0, tariffMax: 0.08,
+    logistics: 'Low', logisticsMin: 0.03, logisticsMax: 0.07,
+    platform: '$1,000 - $5,000 / year', platformMin: 1000, platformMax: 5000,
+    certification: '$3,000 - $10,000', certMin: 3000, certMax: 10000,
   },
   uae: {
-    tariff: '0% - 10%',
-    logistics: 'Medium',
-    platform: '$1,500 - $6,000 / year',
-    certification: '$4,000 - $12,000',
+    tariff: '0% - 10%', tariffMin: 0, tariffMax: 0.10,
+    logistics: 'Medium', logisticsMin: 0.05, logisticsMax: 0.10,
+    platform: '$1,500 - $6,000 / year', platformMin: 1500, platformMax: 6000,
+    certification: '$4,000 - $12,000', certMin: 4000, certMax: 12000,
   },
   default: {
-    tariff: '5% - 15%',
-    logistics: 'Medium',
-    platform: '$2,000 - $7,000 / year',
-    certification: '$4,000 - $15,000',
+    tariff: '5% - 15%', tariffMin: 0.05, tariffMax: 0.15,
+    logistics: 'Medium', logisticsMin: 0.05, logisticsMax: 0.10,
+    platform: '$2,000 - $7,000 / year', platformMin: 2000, platformMax: 7000,
+    certification: '$4,000 - $15,000', certMin: 4000, certMax: 15000,
   },
 }
 
@@ -123,6 +123,15 @@ const getLocalizedLogisticsLevel = (level, isZh) => {
   }
   const zhLevel = zhLevelMap[level] || level
   return `${zhLevel}（约占货值 ${range}）`
+}
+
+const formatUSD = (n) => {
+  if (n === 0) return '$0'
+  if (n >= 1000) {
+    const k = n / 1000
+    return `$${k % 1 === 0 ? k : k.toFixed(1)}k`
+  }
+  return `$${n}`
 }
 
 const normalizeProductCategory = (raw = '') =>
@@ -409,6 +418,7 @@ function App() {
   const [selectedPath, setSelectedPath] = useState('accept')
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [showDecisionFactors, setShowDecisionFactors] = useState(false)
+  const [cargoValue, setCargoValue] = useState('')
   const [leadData, setLeadData] = useState({
     step1: {
       companyName: '',
@@ -1929,7 +1939,16 @@ function App() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 4 && (() => {
+            const parsedCargo = parseFloat(cargoValue.replace(/,/g, '')) || 0
+            const hasCargo = parsedCargo > 0
+            const tariffMin = Math.round(parsedCargo * costData.tariffMin)
+            const tariffMax = Math.round(parsedCargo * costData.tariffMax)
+            const logisticsMin = Math.round(parsedCargo * costData.logisticsMin)
+            const logisticsMax = Math.round(parsedCargo * costData.logisticsMax)
+            const totalMin = tariffMin + logisticsMin + costData.platformMin + costData.certMin
+            const totalMax = tariffMax + logisticsMax + costData.platformMax + costData.certMax
+            return (
             <div className="space-y-5">
               <h2 className="text-2xl">{isZh ? '第 4 步：出海成本概算' : 'Step 4. Cost Framework'}</h2>
               <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
@@ -1942,15 +1961,66 @@ function App() {
                 </p>
               </div>
 
+              <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                <label className="text-sm font-medium text-ink">
+                  {isZh ? '预计出口货值（选填）' : 'Estimated Export Value (optional)'}
+                </label>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="shrink-0 text-sm text-black/45">USD $</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={cargoValue}
+                    onChange={e => setCargoValue(e.target.value)}
+                    placeholder={isZh ? '例如 50000' : 'e.g. 50000'}
+                    className="w-full rounded-xl border border-black/15 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-moss/30"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-black/40">
+                  {isZh
+                    ? hasCargo ? '以下各项已折算为估算金额，并汇总首年总附加成本。' : '填入货值后，各成本项会自动折算为估算金额。'
+                    : hasCargo ? 'Costs below are converted to dollar estimates based on this value.' : 'Enter a value to convert percentage costs to dollar estimates.'}
+                </p>
+              </div>
+
               <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                <InfoCard label={isZh ? '关税预估范围' : 'Estimated Tariff Range'} value={costData.tariff} />
+                <InfoCard
+                  label={isZh ? '关税预估范围' : 'Estimated Tariff Range'}
+                  value={hasCargo ? `${formatUSD(tariffMin)} – ${formatUSD(tariffMax)}` : costData.tariff}
+                  sub={hasCargo ? costData.tariff : null}
+                />
                 <InfoCard
                   label={isZh ? '海空运费级别' : 'Sea/Air Logistics Level'}
-                  value={getLocalizedLogisticsLevel(costData.logistics, isZh)}
+                  value={hasCargo ? `${formatUSD(logisticsMin)} – ${formatUSD(logisticsMax)}` : getLocalizedLogisticsLevel(costData.logistics, isZh)}
+                  sub={hasCargo ? getLocalizedLogisticsLevel(costData.logistics, isZh) : null}
                 />
-                <InfoCard label={isZh ? '平台入驻费用区间' : 'Mainstream Platform Entry Cost'} value={costData.platform} />
-                <InfoCard label={isZh ? '认证办理费用区间' : 'Certification Processing Cost'} value={costData.certification} />
+                <InfoCard
+                  label={isZh ? '平台入驻费用区间' : 'Platform Entry Cost'}
+                  value={costData.platform}
+                  sub={isZh ? '如 Amazon、阿里巴巴国际站等主流平台年费' : 'e.g. Amazon, Alibaba.com annual fees'}
+                />
+                <InfoCard
+                  label={isZh ? '认证办理费用区间' : 'Certification Cost'}
+                  value={costData.certification}
+                  sub={isZh ? '如 CE、FDA、ISO 等认证的申请与办理费用' : 'e.g. CE, FDA, ISO application & processing fees'}
+                />
               </div>
+
+              {hasCargo && (
+                <div className="rounded-2xl border border-moss/25 bg-moss/5 p-4 sm:p-5">
+                  <p className="text-xs uppercase tracking-[0.16em] text-moss/70">
+                    {isZh ? '首年预估总附加成本' : 'Est. Total First-Year Overhead'}
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-ink">
+                    {formatUSD(totalMin)} – {formatUSD(totalMax)}
+                  </p>
+                  <p className="mt-1 text-xs text-black/50">
+                    {isZh
+                      ? `约占货值 ${Math.round((totalMin / parsedCargo) * 100)}%–${Math.round((totalMax / parsedCargo) * 100)}%（含关税、物流、平台费、认证）`
+                      : `~${Math.round((totalMin / parsedCargo) * 100)}%–${Math.round((totalMax / parsedCargo) * 100)}% of cargo value (tariff + logistics + platform + certification)`}
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
                 <p className="text-sm font-semibold text-ink">{isZh ? '怎么看这些数字？' : 'How To Read These Numbers'}</p>
@@ -1990,7 +2060,8 @@ function App() {
                 </button>
               </div>
             </div>
-          )}
+            )
+          })()}
 
           {step === 5 && (
             <div className="space-y-6">
@@ -2439,11 +2510,12 @@ function SelectionChip({ selected, onClick, children, disabled = false }) {
   )
 }
 
-function InfoCard({ label, value }) {
+function InfoCard({ label, value, sub }) {
   return (
     <div className="rounded-2xl border border-black/10 bg-sand p-4">
       <p className="text-xs uppercase tracking-[0.16em] text-black/55">{label}</p>
       <p className="mt-2 text-xl font-semibold text-ink">{value}</p>
+      {sub && <p className="mt-1 text-xs text-black/40">{sub}</p>}
     </div>
   )
 }
