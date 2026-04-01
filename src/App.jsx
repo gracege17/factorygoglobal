@@ -2365,13 +2365,6 @@ function App() {
               {isZh ? '查看建议结果' : 'View My Recommendations'}
               <ArrowRight className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={runAnalysis}
-              className="mt-2 w-full py-2 text-xs text-black/40"
-            >
-              {isZh ? '暂时跳过' : 'Skip for now'}
-            </button>
           </div>
         </div>
       )}
