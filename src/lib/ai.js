@@ -12,6 +12,12 @@ const marketScoreBase = {
   UAE: 77,
 }
 
+const getCategoryItems = (value = '') =>
+  value
+    .split(/[/、，,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+
 const buildTopMarkets = (targetMarkets = [], certifications = [], currentMarkets = [], lang = 'en') => {
   const isZh = lang === 'zh'
   const selected = targetMarkets
@@ -43,7 +49,9 @@ export const createMockAI = ({
   coreAdvantages = [],
   coreAdvantageOther = '',
 }, lang = 'en') => {
-  const product = productCategory.toLowerCase()
+  const categoryItems = getCategoryItems(productCategory)
+  const product = categoryItems.join(' ').toLowerCase()
+  const categorySummary = categoryItems.slice(0, 3).join(' / ')
   const hasFSC = certifications.includes('FSC')
   const isZh = lang === 'zh'
   const topMarkets = buildTopMarkets(targetMarkets, certifications, currentMarkets, lang)
@@ -62,8 +70,8 @@ export const createMockAI = ({
     return {
       topMarkets,
       differentiation: isZh
-        ? `建议避开纯价格战，围绕${primaryCustomer || '进口商和分销商'}主打环保纸品、稳定供货和长期复购场景。`
-        : `Avoid a pure price fight. Position around eco paper supply, repeat-order reliability, and a clear fit for ${primaryCustomer || 'importers and distributors'}.`,
+        ? `建议避开纯价格战，围绕${primaryCustomer || '进口商和分销商'}主打${categorySummary || '环保纸品'}、稳定供货和长期复购场景。`
+        : `Avoid a pure price fight. Position around ${categorySummary || 'eco paper supply'}, repeat-order reliability, and a clear fit for ${primaryCustomer || 'importers and distributors'}.`,
       requiredCertifications: ['FSC Chain of Custody', 'REACH (if chemicals used)', 'ISO 9001'],
       slogan: isZh
         ? `${companyName || '你的工厂'}，面向增长市场的可持续纸品合作伙伴`
@@ -88,19 +96,21 @@ export const createMockAI = ({
   }
 
   return {
-    topMarkets,
-    differentiation: isZh
-      ? `建议围绕“${strengths.slice(0, 2).join(' + ') || '稳定交期 + 稳定品质'}”做定位，重点服务${primaryCustomer || '海外目标客户'}。`
-      : `Position around "${strengths.slice(0, 2).join(' + ') || 'reliable lead time + quality consistency'}" for ${primaryCustomer || 'your target overseas buyers'}.`,
+      topMarkets,
+      differentiation: isZh
+      ? `建议围绕“${strengths.slice(0, 2).join(' + ') || '稳定交期 + 稳定品质'}”做定位，重点服务${primaryCustomer || '海外目标客户'}，主推${categorySummary || '核心品类'}。`
+      : `Position around "${strengths.slice(0, 2).join(' + ') || 'reliable lead time + quality consistency'}" for ${primaryCustomer || 'your target overseas buyers'}, with ${categorySummary || 'your core categories'} as the lead offer.`,
     requiredCertifications: ['ISO 9001', 'Product-specific compliance for destination market'],
     slogan: isZh ? `${companyName || '你的工厂'} | 稳定可靠的 B2B 供货伙伴` : `${companyName || 'Your Factory'} | Built for Reliable B2B Supply`,
     valueProps: isZh
       ? [
+          `主推品类建议：${categorySummary || '请补充核心品类'}`,
           `目标市场优先建议：${targetMarkets.join(' / ') || '北美 / 欧洲 / 中东'}`,
           `目标客户方向：${targetCustomers.join(' / ') || '品牌商 / 批发商 / 进口商'}`,
           strengths[0] || '交付窗口可预测，便于长期复购',
         ]
       : [
+          `Lead categories: ${categorySummary || 'Add your core product categories'}`,
           `Priority markets: ${targetMarkets.join(' / ') || 'North America / Europe / Middle East'}`,
           `Target customers: ${targetCustomers.join(' / ') || 'brands / wholesalers / importers'}`,
           strengths[0] || 'Predictable fulfillment windows for repeat buyers',
