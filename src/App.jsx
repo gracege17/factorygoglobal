@@ -353,6 +353,10 @@ function App() {
   const [showFullscreen, setShowFullscreen] = useState(false)
   const [showDecisionFactors, setShowDecisionFactors] = useState(false)
   const [cargoValue, setCargoValue] = useState('')
+  const [showLeadGate, setShowLeadGate] = useState(false)
+  const [leadContact, setLeadContact] = useState({ wechat: '', name: '' })
+  const [leadContactError, setLeadContactError] = useState('')
+  const [pendingAnalysis, setPendingAnalysis] = useState(false)
   const [leadData, setLeadData] = useState({
     step1: {
       companyName: '',
@@ -868,7 +872,7 @@ function App() {
     })
   }
 
-  const runAnalysis = async () => {
+  const handleStep1Submit = async () => {
     if (analyzing) {
       return
     }
@@ -955,33 +959,7 @@ function App() {
 
     setFormError('')
     setStep1Submitted(true)
-    setAnalysisError('')
-    setAnalyzing(true)
-
-    try {
-      const aiPositioning = await fetchAIStrategy(leadData.step1, lang)
-      setLeadData((prev) => ({
-        ...prev,
-        step2: {
-          aiPositioning,
-        },
-      }))
-      setStep(2)
-    } catch {
-      const fallback = createMockAI(leadData.step1, lang)
-      setLeadData((prev) => ({
-        ...prev,
-        step2: {
-          aiPositioning: fallback,
-        },
-      }))
-      setAnalysisError(
-        isZh ? '建议服务暂时不可用，已展示默认建议。' : 'Recommendation service is temporarily unavailable. Showing fallback recommendation.',
-      )
-      setStep(2)
-    } finally {
-      setAnalyzing(false)
-    }
+    setShowLeadGate(true)
   }
 
   const handleStep3Continue = () => {
@@ -1056,6 +1034,35 @@ function App() {
   const categoryItems = getCategoryItems(leadData.step1.productCategory)
   const primaryImage = leadData.step5.products[0]?.photos[0]?.url
   const productEntries = leadData.step5.products.filter((p) => p.name.trim())
+
+  const runAnalysis = async () => {
+    setShowLeadGate(false)
+    setAnalysisError('')
+    setAnalyzing(true)
+    try {
+      const aiPositioning = await fetchAIStrategy(leadData.step1, lang)
+      setLeadData((prev) => ({ ...prev, step2: { aiPositioning } }))
+      setStep(2)
+    } catch {
+      const fallback = createMockAI(leadData.step1, lang)
+      setLeadData((prev) => ({ ...prev, step2: { aiPositioning: fallback } }))
+      setAnalysisError(
+        isZh ? '建议服务暂时不可用，已展示默认建议。' : 'Recommendation service is temporarily unavailable. Showing fallback recommendation.',
+      )
+      setStep(2)
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const submitLeadGate = () => {
+    if (!leadContact.wechat.trim()) {
+      setLeadContactError(isZh ? '请填写微信号，方便顾问联系你。' : 'Please enter your WeChat ID.')
+      return
+    }
+    setLeadContactError('')
+    runAnalysis()
+  }
 
   const validateStep5Inputs = () => {
     if (!leadData.step5.products[0].name.trim()) {
@@ -1494,7 +1501,7 @@ function App() {
               </div>
 
               <button
-                onClick={runAnalysis}
+                onClick={handleStep1Submit}
                 disabled={analyzing}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
               >
@@ -1697,6 +1704,28 @@ function App() {
                 {isZh ? '免责声明：方向性建议，仅供初步参考。' : 'Disclaimer: Directional suggestion only, for preliminary reference.'}
               </p>
               {analysisError && <p className="text-sm text-clay">{analysisError}</p>}
+
+              <div className="rounded-2xl border border-moss/20 bg-moss/5 p-4 sm:p-5">
+                <p className="text-sm font-medium text-ink">
+                  {isZh ? '想进一步聊聊你的出海方案？' : 'Want to discuss your export strategy?'}
+                </p>
+                <p className="mt-1 text-sm text-black/60">
+                  {isZh ? '扫码添加顾问微信，我们会结合你的情况给出更具体的建议。' : 'Scan to add our advisor on WeChat for a more tailored discussion.'}
+                </p>
+                <div className="mt-3 flex items-center gap-4">
+                  <img
+                    src="/wechat-qr.png"
+                    alt="WeChat QR"
+                    className="h-24 w-24 rounded-xl border border-black/10 object-cover"
+                    onError={(e) => { e.target.style.display = 'none' }}
+                  />
+                  <div className="text-sm text-black/60 space-y-1">
+                    <p>{isZh ? '扫码或搜索微信号：' : 'Scan or search WeChat ID:'}</p>
+                    <p className="font-semibold text-ink">factorygoglobal</p>
+                    <p className="text-xs text-black/40">{isZh ? '工作日 9:00–18:00 在线' : 'Available Mon–Fri 9am–6pm'}</p>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
                 <button
@@ -2292,6 +2321,60 @@ function App() {
             </div>
           )}
       </section>
+
+      {showLeadGate && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+            <p className="text-xs uppercase tracking-[0.18em] text-moss/70">{isZh ? '一步之遥' : 'Almost there'}</p>
+            <h3 className="mt-2 text-xl font-semibold text-ink">
+              {isZh ? '留下微信，顾问会主动联系你' : 'Share your WeChat to get advisor follow-up'}
+            </h3>
+            <p className="mt-1.5 text-sm text-black/55">
+              {isZh ? '建议结果生成后，顾问团队会通过微信发送完整出海方案。' : 'Our advisor will reach out via WeChat with a complete export strategy.'}
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <div>
+                <label className="block text-xs text-black/55">{isZh ? '微信号' : 'WeChat ID'}<span className="ml-1 text-clay">*</span></label>
+                <input
+                  autoFocus
+                  value={leadContact.wechat}
+                  onChange={(e) => { setLeadContact((prev) => ({ ...prev, wechat: e.target.value })); setLeadContactError('') }}
+                  onKeyDown={(e) => e.key === 'Enter' && submitLeadGate()}
+                  className={`mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring ${leadContactError ? 'border-clay/60 bg-clay/5' : 'border-black/15'}`}
+                  placeholder={isZh ? '你的微信号' : 'Your WeChat ID'}
+                />
+                {leadContactError && <p className="mt-1 text-xs text-clay">{leadContactError}</p>}
+              </div>
+              <div>
+                <label className="block text-xs text-black/55">{isZh ? '姓名（选填）' : 'Name (optional)'}</label>
+                <input
+                  value={leadContact.name}
+                  onChange={(e) => setLeadContact((prev) => ({ ...prev, name: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-black/15 px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring"
+                  placeholder={isZh ? '你的姓名或称呼' : 'Your name'}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={submitLeadGate}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white"
+            >
+              {isZh ? '查看建议结果' : 'View My Recommendations'}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={runAnalysis}
+              className="mt-2 w-full py-2 text-xs text-black/40"
+            >
+              {isZh ? '暂时跳过' : 'Skip for now'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showFullscreen && websiteGenerated && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 px-4" onClick={() => setShowFullscreen(false)}>
