@@ -23,7 +23,7 @@ const steps = [
   'Cost Framework',
 ]
 
-const certOptions = ['ISO 9001', 'CE', 'FSC', 'FDA', 'BSCI', 'SGS / 第三方验厂', 'RoHS', 'REACH', '其他', '暂无']
+const certOptions = ['ISO 9001', 'CE', 'EN71', 'ASTM F963', 'CPSC', 'CCC', 'BSCI', 'SGS / 第三方验厂', 'RoHS', '其他', '暂无']
 const exportExperienceOptions = [
   { value: 'has', labelZh: '有', labelEn: 'Yes' },
   { value: 'none', labelZh: '暂无', labelEn: 'No' },
@@ -44,7 +44,7 @@ const coreAdvantageOptions = [
   '研发能力强',
   '其他',
 ]
-const productCategorySuggestions = ['纸制品', '包装材料', '家具家居', '五金建材', '清洁用品', '电子产品', '机械设备', '纺织服装', '汽配摩配']
+const productCategorySuggestions = ['益智玩具', '毛绒玩具', '电动玩具', '积木玩具', '遥控玩具', '婴幼儿玩具', '户外玩具', '模型玩具', '拼图玩具']
 
 const costReference = {
   usa: {
@@ -1226,7 +1226,7 @@ function App() {
                                 addProductCategoryTag(productCategoryDraft)
                               }
                             }}
-                            placeholder={isZh ? '输入更具体品类，例如：抽纸、礼盒包装' : 'Input a specific category, e.g. facial tissue'}
+                            placeholder={isZh ? '输入更具体品类，例如：积木、益智玩具' : 'Input a specific category, e.g. building blocks, plush toys'}
                           />
                           <button
                             type="button"
@@ -2050,7 +2050,7 @@ function App() {
                         value={product.name}
                         onChange={(e) => handleProductNameChange(productIndex, e.target.value)}
                         className={`mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none ring-moss/30 transition focus:ring ${productIndex === 0 && productNameError ? 'border-clay/60 bg-clay/5' : 'border-black/15'}`}
-                        placeholder={isZh ? '例如：竹纤维面巾纸' : 'e.g. Bamboo facial tissue'}
+                        placeholder={isZh ? '例如：益智积木玩具' : 'e.g. Educational building blocks'}
                       />
                     </div>
 

@@ -66,6 +66,33 @@ export const createMockAI = ({
       ? '建议尽快补强认证或第三方背书，以提高目标市场信任度。'
       : 'Recommend strengthening certifications or third-party verification to improve trust in the target market.'
 
+  if (product.includes('toy') || product.includes('玩具') || product.includes('积木') || product.includes('毛绒') || product.includes('遥控') || product.includes('模型') || product.includes('拼图')) {
+    return {
+      topMarkets,
+      differentiation: isZh
+        ? `建议围绕"${strengths.slice(0, 2).join(' + ') || '安全认证 + 稳定品质'}"做定位，重点服务${primaryCustomer || '品牌商和进口商'}，主推${categorySummary || '核心玩具品类'}。玩具出口核心壁垒是认证，建议优先补齐目标市场所需资质。`
+        : `Position around "${strengths.slice(0, 2).join(' + ') || 'safety compliance + quality consistency'}" for ${primaryCustomer || 'brand owners and importers'}, leading with ${categorySummary || 'your core toy categories'}. Safety certification is the #1 barrier in toy exports — prioritize getting compliant first.`,
+      requiredCertifications: ['EN71 (Europe)', 'ASTM F963 (USA)', 'CPSC compliance (USA)', 'CE marking', 'ISO 9001'],
+      slogan: isZh
+        ? `${companyName || '你的工厂'} | 安全认证、稳定交付的玩具出口伙伴`
+        : `${companyName || 'Your Factory'} | Certified, Reliable Toy Manufacturer for Global Buyers`,
+      valueProps: isZh
+        ? [
+            `主推品类：${categorySummary || '请补充核心玩具品类'}`,
+            `认证齐全，符合${targetMarkets.join(' / ') || '欧美'}主流市场准入要求`,
+            `目标客户：${targetCustomers.join(' / ') || '品牌商 / 进口商 / 批发商'}`,
+            strengths[0] || '产品安全可追溯，支持买家审厂',
+          ]
+        : [
+            `Lead categories: ${categorySummary || 'Add your core toy categories'}`,
+            `Fully certified for ${targetMarkets.join(' / ') || 'Europe / North America'} market entry`,
+            `Target customers: ${targetCustomers.join(' / ') || 'brand owners / importers / wholesalers'}`,
+            strengths[0] || 'Traceable safety standards with factory audit support',
+          ],
+      trust: trustText,
+    }
+  }
+
   if (product.includes('paper') || product.includes('tissue') || product.includes('卫生纸')) {
     return {
       topMarkets,
